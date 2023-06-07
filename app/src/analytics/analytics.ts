@@ -8,35 +8,35 @@ import type { ChainClient } from '~/network/Chain'
 const TRADE = 'trade'
 
 export function initAnalytics(token: string, config?: Partial<Config>) {
-  mixpanel.init(token, config)
+  // mixpanel.init(token, config)
 }
 
 export function trackPage(page: Page, data?: AppData) {
-  mixpanel.track(page, data)
+  // mixpanel.track(page, data)
 }
 
 export function trackWalletConnection(events: WalletEvents, address?: string) {
-  if (address) {
-    mixpanel.identify(address)
-  }
-  mixpanel.track(events)
+  // if (address) {
+  //   mixpanel.identify(address)
+  // }
+  // mixpanel.track(events)
 }
 
 export function trackOffer(event: OfferEvents, offer: OfferData) {
-  mixpanel.track(event, offer)
+  // mixpanel.track(event, offer)
 }
 
 export function trackTrade(event: TradeEvents, trade: TradeData) {
-  mixpanel.track(event, trade)
-  mixpanel.track(TRADE, trade)
+  // mixpanel.track(event, trade)
+  // mixpanel.track(TRADE, trade)
 }
 
 export function trackSocialLinks(event: ClickLinkEvents) {
-  mixpanel.track(event)
+  // mixpanel.track(event)
 }
 
 export function trackAppEvents(event: AppEvents, data?: AppData) {
-  mixpanel.track(event, data)
+  // mixpanel.track(event, data)
 }
 
 export enum Page {

@@ -7,6 +7,8 @@ export function denomsAvailable(chainClient: ChainClient): Map<string, MicronDen
   switch (chainClient) {
     case ChainClient.kujiraMainnet:
       return new Map<string, MicronDenom>(Object.entries(denomList.kujira_mainnet))
+    case ChainClient.terra:
+      return new Map<string, MicronDenom>(Object.entries(denomList.terra))
     default:
       return new Map<string, MicronDenom>(Object.entries(denomList.kujira_testnet))
   }

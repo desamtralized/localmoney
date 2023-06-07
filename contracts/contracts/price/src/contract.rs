@@ -14,13 +14,6 @@ use localmoney_protocol::errors::ContractError;
 use localmoney_protocol::errors::ContractError::HubAlreadyRegistered;
 use localmoney_protocol::guards::{assert_migration_parameters, assert_ownership};
 use localmoney_protocol::hub_utils::{get_hub_admin, get_hub_config, register_hub_internal};
-use localmoney_protocol::kujira::asset::{Asset, AssetInfo};
-use localmoney_protocol::kujira::denom::Denom as KujiraDenom;
-use localmoney_protocol::kujira::fin::QueryMsg as FinQueryMsg;
-use localmoney_protocol::kujira::fin::SimulationResponse;
-use localmoney_protocol::kujira::msg::KujiraMsg;
-use localmoney_protocol::kujira::querier::KujiraQuerier;
-use localmoney_protocol::kujira::query::KujiraQuery;
 use localmoney_protocol::price::{
     CurrencyPrice, DenomFiatPrice, ExecuteMsg, PriceRoute, QueryMsg, DENOM_PRICE_ROUTE, FIAT_PRICE,
 };
@@ -32,11 +25,11 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    deps: DepsMut<KujiraQuery>,
+    deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
     _msg: InstantiateMsg,
-) -> Result<Response<KujiraMsg>, ContractError> {
+) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION).unwrap();
     let res = Response::new().add_attribute("action", "instantiate_price");
     Ok(res)
@@ -44,11 +37,11 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    deps: DepsMut<KujiraQuery>,
+deps: DepsMut,
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response<KujiraMsg>, ContractError> {
+) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::RegisterHub {} => register_hub(deps, info),
         ExecuteMsg::UpdatePrices(prices) => update_prices(deps, env, info, prices),
@@ -59,7 +52,7 @@ pub fn execute(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps<KujiraQuery>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Price { fiat, denom } => {
             to_binary(&query_fiat_price_for_denom(deps, fiat, denom)?)
@@ -68,18 +61,18 @@ pub fn query(deps: Deps<KujiraQuery>, _env: Env, msg: QueryMsg) -> StdResult<Bin
 }
 
 fn register_hub(
-    deps: DepsMut<KujiraQuery>,
+    deps: DepsMut,
     info: MessageInfo,
-) -> Result<Response<KujiraMsg>, ContractError> {
+) -> Result<Response, ContractError> {
     register_hub_internal(info.sender, deps.storage, HubAlreadyRegistered {})
 }
 
 pub fn update_prices(
-    deps: DepsMut<KujiraQuery>,
+    deps: DepsMut,
     env: Env,
     info: MessageInfo,
     prices: Vec<CurrencyPrice>,
-) -> Result<Response<KujiraMsg>, ContractError> {
+) -> Result<Response, ContractError> {
     let hub_cfg = get_hub_config(deps.as_ref());
     assert_ownership(info.sender, hub_cfg.price_provider_addr)?;
     let mut attrs: Vec<(&str, String)> = vec![("action", "update_prices".to_string())];
@@ -102,11 +95,11 @@ pub fn update_prices(
 }
 
 pub fn register_price_route_for_denom(
-    deps: DepsMut<KujiraQuery>,
+    deps: DepsMut,
     info: MessageInfo,
     denom: Denom,
     route: Vec<PriceRoute>,
-) -> Result<Response<KujiraMsg>, ContractError> {
+) -> Result<Response, ContractError> {
     let admin = get_hub_admin(deps.as_ref()).addr;
     assert_ownership(info.sender, admin)?;
 
@@ -127,11 +120,11 @@ pub fn register_price_route_for_denom(
 }
 
 pub fn query_fiat_price_for_denom(
-    deps: Deps<KujiraQuery>,
+    deps: Deps,
     fiat: FiatCurrency,
     denom: Denom,
 ) -> StdResult<DenomFiatPrice> {
-    let kq = KujiraQuerier::new(&deps.querier);
+    /* let kq = KujiraQuerier::new(&deps.querier);
     let atom_usd_price = kq.query_exchange_rate(BASE_ORACLE_DENOM).unwrap();
     let amount = Uint128::new(1_000_000u128);
     let denom_str = denom_to_string(&denom.clone());
@@ -177,20 +170,20 @@ pub fn query_fiat_price_for_denom(
     let denom_fiat_price = fiat_usd
         .mul(&atom_usd)
         .mul(&denom_atom)
-        .div(Uint256::from(decimal_places));
+        .div(Uint256::from(decimal_places)); */
     Ok(DenomFiatPrice {
         denom: denom.clone(),
         fiat: fiat.clone(),
-        price: denom_fiat_price,
+        price: Uint256::from(1u128),
     })
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(
-    deps: DepsMut<KujiraQuery>,
+    deps: DepsMut,
     _env: Env,
     _msg: MigrateMsg,
-) -> Result<Response<KujiraMsg>, ContractError> {
+) -> Result<Response, ContractError> {
     let previous_contract_version = get_contract_version(deps.storage).unwrap();
 
     assert_migration_parameters(

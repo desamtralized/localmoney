@@ -8,7 +8,7 @@ import './ui/style/reset.scss'
 import 'vue-toastification/dist/index.css'
 
 const client = useClientStore()
-client.setClient(ChainClient.kujiraMainnet) // required to properly init chain
+client.setClient(ChainClient.terra) // required to properly init chain
 const loading = computed(() => client.loadingState)
 
 useHead({
