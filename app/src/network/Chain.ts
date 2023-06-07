@@ -88,7 +88,7 @@ export enum ChainClient {
   kujiraMainnet = 'KUJIRA_MAINNET',
   juno = 'JUNO',
   dev = 'DEV',
-  terra = 'TERRA'
+  terra = 'TERRA',
 }
 
 // Centralized place to instantiate chain client and inject dependencies if needed

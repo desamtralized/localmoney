@@ -12,7 +12,12 @@ client.setClient(ChainClient.terra) // required to properly init chain
 const loading = computed(() => client.loadingState)
 
 useHead({
-  title: client.chainClient === ChainClient.kujiraMainnet ? 'Local Money' : 'Local Money - TESTNET',
+  title:
+    client.chainClient === ChainClient.kujiraMainnet
+      ? 'Local Money'
+      : client.chainClient === ChainClient.terra
+      ? 'Luna Pay'
+      : 'Local Money - TESTNET',
   meta: [
     {
       name: 'description',
