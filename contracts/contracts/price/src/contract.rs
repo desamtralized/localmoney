@@ -3,11 +3,11 @@ use std::ops::{Div, Mul};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128, Uint256,
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128,
+    Uint256,
 };
 use cw2::{get_contract_version, set_contract_version};
 use cw20::Denom;
-use localmoney_protocol::constants::BASE_ORACLE_DENOM;
 use localmoney_protocol::currencies::FiatCurrency;
 use localmoney_protocol::denom_utils::denom_to_string;
 use localmoney_protocol::errors::ContractError;
@@ -15,7 +15,9 @@ use localmoney_protocol::errors::ContractError::HubAlreadyRegistered;
 use localmoney_protocol::guards::{assert_migration_parameters, assert_ownership};
 use localmoney_protocol::hub_utils::{get_hub_admin, get_hub_config, register_hub_internal};
 use localmoney_protocol::price::{
-    CurrencyPrice, DenomFiatPrice, ExecuteMsg, PriceRoute, QueryMsg, DENOM_PRICE_ROUTE, FIAT_PRICE,
+    AssetInfo, CurrencyPrice, DenomFiatPrice, ExecuteMsg, NativeToken, OfferAsset, PriceRoute,
+    QueryMsg, Simulation, SimulationResponse, SimulationResponseData, SwapSimulation,
+    DENOM_PRICE_ROUTE, FIAT_PRICE,
 };
 use localmoney_protocol::profile::{InstantiateMsg, MigrateMsg};
 
@@ -37,7 +39,7 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-deps: DepsMut,
+    deps: DepsMut,
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
@@ -60,10 +62,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-fn register_hub(
-    deps: DepsMut,
-    info: MessageInfo,
-) -> Result<Response, ContractError> {
+fn register_hub(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
     register_hub_internal(info.sender, deps.storage, HubAlreadyRegistered {})
 }
 
@@ -119,41 +118,47 @@ pub fn register_price_route_for_denom(
     Ok(res)
 }
 
+//TODO: temporarily will work only for LUNA
 pub fn query_fiat_price_for_denom(
     deps: Deps,
     fiat: FiatCurrency,
     denom: Denom,
 ) -> StdResult<DenomFiatPrice> {
-    /* let kq = KujiraQuerier::new(&deps.querier);
-    let atom_usd_price = kq.query_exchange_rate(BASE_ORACLE_DENOM).unwrap();
-    let amount = Uint128::new(1_000_000u128);
-    let denom_str = denom_to_string(&denom.clone());
-    let denom_price_route = &DENOM_PRICE_ROUTE
-        .load(deps.storage, denom_str.as_str())
-        .unwrap();
+    //TODO: Move "uluna" to a cfg field.
+    let uluna = "uluna";
+    let luna_price_route = DENOM_PRICE_ROUTE.load(deps.storage, &uluna);
+    let luna_price_route = match luna_price_route {
+        Ok(route) => {
+            let route = route.get(0).unwrap().clone();
+            if route.offer_asset != denom {
+                return Err(StdError::generic_err("Unsupported denom."));
+            }
+            route
+        }
+        Err(e) => return Err(StdError::generic_err("No price route for LUNA")),
+    };
 
-    // Query the price of the denom in ATOM
-    let denom_atom = denom_price_route
-        .iter()
-        .fold(Uint256::from(1u128), |price, route| {
-            let denom_price_result: SimulationResponse = deps
-                .querier
-                .query_wasm_smart(
-                    route.pool.clone(),
-                    &FinQueryMsg::Simulation {
-                        offer_asset: Asset {
-                            info: AssetInfo::NativeToken {
-                                denom: KujiraDenom::from(denom_to_string(&route.offer_asset)),
+    // Query the price of LUNA in USDC
+    let one = "1000000";
+    let denom_price_result: SimulationResponseData = deps
+        .querier
+        .query_wasm_smart(
+            &luna_price_route.pool.clone(),
+            &SwapSimulation {
+                simulation: Simulation {
+                    offer_asset: OfferAsset {
+                        info: AssetInfo {
+                            native_token: NativeToken {
+                                denom: denom_to_string(&luna_price_route.offer_asset),
                             },
-                            amount,
                         },
+                        amount: one.to_string(),
                     },
-                )
-                .unwrap();
-            price * denom_price_result.return_amount
-        });
-    let atom_usd = Uint256::from(Uint128::new(1_000_000u128).mul(atom_usd_price.rate));
-
+                },
+            },
+        )
+        .unwrap();
+    let luna_usdc_price = Uint256::from(denom_price_result.return_amount.u128());
     // If fiat is USD, we don't need to query the price
     let fiat_price = match fiat {
         FiatCurrency::USD => CurrencyPrice {
@@ -166,24 +171,19 @@ pub fn query_fiat_price_for_denom(
 
     // Calculate the price of the denom in fiat
     let fiat_usd = Uint256::from(fiat_price.usd_price);
-    let decimal_places = 1_000_000_000_000u128;
+    let decimal_places = 1_000_000u128;
     let denom_fiat_price = fiat_usd
-        .mul(&atom_usd)
-        .mul(&denom_atom)
-        .div(Uint256::from(decimal_places)); */
+        .mul(&luna_usdc_price)
+        .div(Uint256::from(decimal_places));
     Ok(DenomFiatPrice {
-        denom: denom.clone(),
-        fiat: fiat.clone(),
-        price: Uint256::from(1u128),
+        denom,
+        fiat,
+        price: denom_fiat_price,
     })
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(
-    deps: DepsMut,
-    _env: Env,
-    _msg: MigrateMsg,
-) -> Result<Response, ContractError> {
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     let previous_contract_version = get_contract_version(deps.storage).unwrap();
 
     assert_migration_parameters(
