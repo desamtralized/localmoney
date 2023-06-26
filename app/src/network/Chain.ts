@@ -28,6 +28,8 @@ import { CosmosChain } from '~/network/cosmos/CosmosChain'
 export interface Chain {
   init(): void
 
+  getName(): string
+
   connectWallet(): Promise<void>
 
   disconnectWallet(): Promise<void>
