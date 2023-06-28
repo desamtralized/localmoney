@@ -17,7 +17,7 @@ switch (client.chainClient) {
     title = 'Local Money'
     break
   case ChainClient.terra:
-    title = 'Luna Pay - Powered by Local Money'
+    title = 'LunaPay - Powered by Local Money'
     break
   default:
     title = 'Local Money - TESTNET'
