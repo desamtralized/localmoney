@@ -22,7 +22,8 @@ onUnmounted(() => {
       <div class="wrap-title">
         <h1 class="title"><span class="text-primary">$LUNA</span>'s native fiat ramp</h1>
         <p class="sub-title">
-          <span class="strong">LunaPay</span> is a decentralized P2P marketplace for the crypto multi-chain world.
+          Your Gateway to the Decentralized Economy: Swap <span class="text-primary">$LUNA</span> for Fiat in an Open
+          Marketplace.
         </p>
         <div class="wrap-cta">
           <div class="wrap-btns">
