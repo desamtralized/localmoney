@@ -71,8 +71,8 @@ header {
       align-content: center;
 
       .logo {
-        width: 220px;
-        height: 42px;
+        width: 209px;
+        height: 54px;
         background-size: cover;
         background-image: $logo-horizontal-dark;
       }
