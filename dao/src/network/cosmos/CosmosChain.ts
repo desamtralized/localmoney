@@ -15,6 +15,7 @@ import type {
   FetchOffersArgs,
   FiatCurrency,
   HubConfig,
+  NewProposal,
   NewTrade,
   OfferResponse,
   PatchOffer,
@@ -675,6 +676,24 @@ export class CosmosChain implements Chain {
           'auto'
         )
         console.log('Unbond result >> ', result)
+      } catch (e) {
+        throw DefaultError.fromError(e)
+      }
+    }
+  }
+  
+  async propose(proposal: NewProposal): Promise<void> {
+    const msg = {propose: proposal};
+    console.log('msg', msg)
+    if (this.cwClient instanceof SigningCosmWasmClient && this.signer) {
+      try {
+        const result = await this.cwClient.execute(
+          this.getWalletAddress(),
+          DAO_MULTISIG,
+          msg,
+          'auto'
+        )
+        console.log('Propose result >> ', result)
       } catch (e) {
         throw DefaultError.fromError(e)
       }

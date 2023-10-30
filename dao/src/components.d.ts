@@ -12,6 +12,7 @@ declare module '@vue/runtime-core' {
     CollapsedMyOffer: typeof import('./ui/components/myOffers/CollapsedMyOffer.vue')['default']
     CollapsedOffer: typeof import('./ui/components/offers/CollapsedOffer.vue')['default']
     CreateOffer: typeof import('./ui/components/offers/CreateOffer.vue')['default']
+    CreateProposal: typeof import('./ui/components/CreateProposal.vue')['default']
     CurrencyInput: typeof import('./ui/components/CurrencyInput.vue')['default']
     CustomSelect: typeof import('./ui/components/commons/CustomSelect.vue')['default']
     ExpandedMakerOffer: typeof import('./ui/components/maker/ExpandedMakerOffer.vue')['default']

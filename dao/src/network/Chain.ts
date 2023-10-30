@@ -15,6 +15,7 @@ import type {
   FetchOffersArgs,
   FiatCurrency,
   HubConfig,
+  NewProposal,
   NewTrade,
   OfferResponse,
   PatchOffer,
@@ -110,6 +111,8 @@ export interface Chain {
   bond(amount: number): Promise<void>
 
   unbond(amount: number): Promise<void>
+
+  propose(proposal: NewProposal): Promise<void>
 }
 
 export enum ChainClient {

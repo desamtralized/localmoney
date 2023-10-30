@@ -13,6 +13,7 @@ import type {
   FetchOffersArgs,
   FiatCurrency,
   HubConfig,
+  NewProposal,
   NewTrade,
   OfferResponse,
   OfferType,
@@ -338,6 +339,16 @@ export const useClientStore = defineStore({
       this.loadingState = LoadingState.show('Unbonding...')
       try {
         await this.client.unbond(amount)
+      } catch (e) {
+        this.handle.error(e)
+      } finally {
+        this.loadingState = LoadingState.dismiss()
+      }
+    },
+    async propose(proposal: NewProposal) {
+      this.loadingState = LoadingState.show('Proposing...')
+      try {
+        await this.client.propose(proposal)
       } catch (e) {
         this.handle.error(e)
       } finally {

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useClientStore } from '~/stores/client'
-import { Proposal } from '~/types/components.interface'
+import { Proposal, StakeData } from '~/types/components.interface'
 
 const client = useClientStore()
 const { userWallet } = storeToRefs(client)
+const createProposalModalActive = ref(false)
 const proposalsResult = computed(() => client.proposals)
+const myStake = ref<StakeData>({})
 const proposals = computed(() => {
   if (proposalsResult.value.isSuccess()) {
     return proposalsResult.value.data
@@ -14,14 +16,36 @@ const proposals = computed(() => {
   }
 })
 
+function onRefresh() {
+  nextTick(async () => await client.fetchProposals())
+}
 // const paginationLastItem = ref<number>(0)
 
-onMounted(() => {
-  nextTick(async () => await client.fetchProposals())
-  // trackPage(Page.my_trades)
+function toggleCreateProposalModal() {
+  createProposalModalActive.value = !createProposalModalActive.value
+}
+
+onBeforeMount(async () => {
+  fetchStaked()
 })
 
-onUnmounted(async () => {})
+function fetchStaked() {
+  nextTick(async() => {
+    await client.fetchProposals()
+    if (typeof userWallet.value.address === 'string' && userWallet.value.address.length > 1)  {
+      myStake.value = await client.fetchStakedByAddress(userWallet.value.address);
+      console.log('myStake', myStake.value)
+    }
+  })
+}
+
+const minStakeToCreate = computed(() => {
+  return 5000 * 1000000
+})
+
+watch(userWallet, () => {
+  nextTick(fetchStaked)
+})
 
 async function loadMore() {
   // const lastIndex = trades.value.length
@@ -34,6 +58,12 @@ async function loadMore() {
   <main class="page">
     <div class="wrap-title">
       <h2>Proposals</h2>
+      <div class="btn-add" @click="toggleCreateProposalModal()" v-if="Number(myStake.stake) >= minStakeToCreate">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5V19" stroke="inherit" stroke-width="2" stroke-linecap="round" />
+          <path d="M5 12L19 12" stroke="inherit" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
     </div>
     <!-- Open Proposals section -->
     <ListContentResult :result="proposalsResult" emptyStateMsg="There are no proposals here yet" @loadMore="loadMore()">
@@ -44,6 +74,9 @@ async function loadMore() {
       </section>
     </ListContentResult>
     <!-- End Trades History section -->
+    <Modal :modalActive="createProposalModalActive">
+      <CreateProposal @cancel="toggleCreateProposalModal()" :on-refresh="onRefresh" />
+    </Modal>
   </main>
 </template>
 
@@ -118,5 +151,41 @@ h3 {
 .col-7,
 :deep(.col-7) {
   width: 10%;
+}
+.btn-add {
+  width: 40px;
+  height: 40px;
+  background-color: $surface;
+  border-radius: 8px;
+  margin-left: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  svg {
+    stroke: $primary;
+    vertical-align: middle;
+  }
+}
+
+.modal {
+  position: fixed;
+  width: 100%;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: $z-modal-overlay;
+  backdrop-filter: blur(10px);
+
+  overflow-y: auto;
+  &::-webkit-scrollbar {
+    width: 8px;
+    background: $gray100;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $gray300;
+    border-radius: 56px;
+  }
 }
 </style>

@@ -328,3 +328,9 @@ export type StakeData = {
   };
 };
 
+export type NewProposal = {
+  title: string;
+  description: string;
+  msgs: any[];
+  latest: null;
+}
