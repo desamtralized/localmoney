@@ -286,3 +286,22 @@ export type Proposal = {
 export type ProposalsData = {
   proposals: Proposal[];
 };
+
+export type VoteType = "yes" | "no" | "abstain" | "veto";
+
+export type Vote = {
+  proposal_id: number;
+  voter: string;
+  vote: VoteType;
+  weight: number;
+};
+
+export interface ThresholdQuorum {
+  threshold: string;
+  quorum: string;
+  total_weight: number;
+}
+
+export interface ThresholdQuorumResponse {
+  threshold_quorum: ThresholdQuorum;
+}

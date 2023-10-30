@@ -22,7 +22,11 @@ import type {
   Profile,
   Proposal,
   ProposalsData,
+  ThresholdQuorum,
+  ThresholdQuorumResponse,
   TradeInfo,
+  Vote,
+  VoteType,
 } from '~/types/components.interface'
 import { DAO_MULTISIG } from '~/utils/constants'
 import { denomToValue } from '~/utils/denom'
@@ -526,12 +530,74 @@ export class CosmosChain implements Chain {
         limit: limit,
         start_before: start_before
       }};
-      console.log('hey hey cw client', this.cwClient);
       const response = (await this.cwClient!.queryContractSmart(DAO_MULTISIG, queryMsg)) as ProposalsData
-      console.log("Proposals response >>> ", response);
       return response.proposals
     } catch (e) {
       throw DefaultError.fromError(e)
+    }
+  }
+
+  async fetchProposal(proposalId: number): Promise<Proposal> {
+    try {
+      if (!this.cwClient) {
+        await this.init()
+      }
+      const queryMsg = { proposal: { proposal_id: parseInt(proposalId) } }
+      console.log('queryMsg >> ', queryMsg)
+      const response = (await this.cwClient!.queryContractSmart(DAO_MULTISIG, queryMsg)) as Proposal
+      return response
+    } catch (e) {
+      throw DefaultError.fromError(e)
+    }
+  }
+
+  async fetchProposalVotes(proposalId: number, startAfter?: number, votes?: Vote[]): Promise<Vote[]> {
+    try {
+      if (!this.cwClient) {
+        await this.init()
+      }
+      //TODO: Implement pagination
+      const queryMsg = { list_votes: { proposal_id: parseInt(proposalId), start_after: parseInt(startAfter), limit: 10000} }
+      const votes = (await this.cwClient!.queryContractSmart(DAO_MULTISIG, queryMsg)).votes as Vote[]
+      return votes
+    } catch (e) {
+      throw DefaultError.fromError(e)
+    }
+  }
+  
+  async fetchThreshold(): Promise<ThresholdQuorum> {
+    try {
+      if (!this.cwClient) {
+        await this.init()
+      }
+      const queryMsg = { threshold: {} }
+      const response = (await this.cwClient!.queryContractSmart(DAO_MULTISIG, queryMsg)) as ThresholdQuorumResponse
+      return response.threshold_quorum
+    } catch (e) {
+      throw DefaultError.fromError(e)
+    }
+  }
+
+  async castVote(vote: VoteType, proposalId: number) {
+    const msg = {vote: { 
+      vote: vote,
+      proposal_id: proposalId
+    }}
+    console.log('Cast Vote msg >> ', msg)
+    if (this.cwClient instanceof SigningCosmWasmClient && this.signer) {
+      try {
+        const result = await this.cwClient.execute(
+          this.getWalletAddress(),
+          DAO_MULTISIG,
+          msg,
+          'auto'
+        )
+        console.log('Cast Vote result >> ', result)
+      } catch (e) {
+        throw DefaultError.fromError(e)
+      }
+    } else {
+      throw new WalletNotConnected()
     }
   }
 

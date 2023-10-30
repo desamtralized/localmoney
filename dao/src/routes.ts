@@ -1,36 +1,12 @@
-import Home from '~/ui/pages/Home.vue'
-import Offers from '~/ui/pages/Offers.vue'
-import Trades from '~/ui/pages/Trades.vue'
-import TradeDetail from '~/ui/pages/TradeDetail.vue'
-import Arbitration from '~/ui/pages/Arbitration.vue'
-import Maker from '~/ui/pages/Maker.vue'
 import Proposals from '~/ui/pages/Proposals.vue'
+import Proposal from '~/ui/pages/Proposal.vue'
 
 const routes = [
   {
-    path: '/:type?/:token?/:fiat?',
+    path: '/',
     name: 'Home',
-    component: Home,
-  },
-  {
-    path: '/maker/:addr',
-    name: 'Maker',
-    component: Maker,
-  },
-  {
-    path: '/offers',
-    name: 'Offers',
-    component: Offers,
-  },
-  {
-    path: '/trades',
-    name: 'Trades',
-    component: Trades,
-  },
-  {
-    path: '/trade/:id',
-    name: 'TradeDetail',
-    component: TradeDetail,
+    component: Proposals,
+    alias: '/proposals'
   },
   {
     path: '/staking',
@@ -38,14 +14,9 @@ const routes = [
     component: [],
   },
   {
-    path: '/arbitration',
-    name: 'Arbitration',
-    component: Arbitration,
-  },
-  {
-    path: '/proposals',
-    name: 'Proposals',
-    component: Proposals,
+    path: '/proposal/:id',
+    name: 'Proposal',
+    component: Proposal, 
   }
 ]
 

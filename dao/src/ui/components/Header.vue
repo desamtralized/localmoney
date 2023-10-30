@@ -26,6 +26,7 @@ const isMobile = computed(() => width.value <= 550)
       <div class="wrap-logo">
         <router-link :to="{ path: '/' }">
           <div className="logo" />
+          <span className="dao">DAO</span>
         </router-link>
 
         <div class="badge-testnet">
@@ -69,6 +70,18 @@ header {
     .wrap-logo {
       display: flex;
       align-content: center;
+
+      a {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: white;
+        font-size: 26px;
+        font-weight: 700;
+        span {
+          margin-left: 4px;
+        }
+      }
 
       .logo {
         width: 220px;

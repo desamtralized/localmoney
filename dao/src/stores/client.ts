@@ -22,6 +22,8 @@ import type {
   Proposal,
   TradeInfo,
   UserWallet,
+  Vote,
+  VoteType,
 } from '~/types/components.interface'
 import { LoadingState, OfferState, TradeState } from '~/types/components.interface'
 import type { Secrets } from '~/utils/crypto'
@@ -291,8 +293,27 @@ export const useClientStore = defineStore({
         this.proposals = ListResult.error(e as ChainError)
       }
     },
+    async fetchProposalVotes(proposalId: number) {
+      return await this.client.fetchProposalVotes(proposalId)
+    },
+    async fetchProposal(proposalId: number) {
+      return await this.client.fetchProposal(proposalId)
+    },
+    async fetchThreshold() {
+      return await this.client.fetchThreshold()
+    },
     async fetchTradeDetail(tradeId: number) {
       return await this.client.fetchTradeDetail(tradeId)
+    },
+    async castVote(vote: VoteType, proposalId: number) {
+      this.loadingState = LoadingState.show('Casting vote...')
+      try {
+        await this.client.castVote(vote, proposalId)
+      } catch (e) {
+        this.handle.error(e)
+      } finally {
+        this.loadingState = LoadingState.dismiss()
+      }
     },
     async fetchArbitrators() {
       this.arbitrators = ListResult.loading()

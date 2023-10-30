@@ -21,7 +21,11 @@ import type {
   PostOffer,
   Profile,
   Proposal,
+  ThresholdQuorum,
+  ThresholdQuorumResponse,
   TradeInfo,
+  Vote,
+  VoteType,
 } from '~/types/components.interface'
 import { CosmosChain } from '~/network/cosmos/CosmosChain'
 
@@ -84,6 +88,14 @@ export interface Chain {
 
   // DAO endpoints
   fetchProposals(limit: number, start_before?: number): Promise<Proposal[]>
+
+  fetchProposal(proposalId: number): Promise<Proposal>
+
+  fetchProposalVotes(proposalId: number): Promise<Vote[]>
+
+  fetchThreshold(): Promise<ThresholdQuorum>
+
+  castVote(vote: VoteType, proposalId: number): Promise<void>
 }
 
 export enum ChainClient {

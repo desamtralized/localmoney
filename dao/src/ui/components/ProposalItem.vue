@@ -1,6 +1,8 @@
 <template>
   <div class="card proposal-item">
-    <h4>{{ proposal.title }}</h4>
+    <router-link :to="`/proposal/${proposal.id}`">
+      <h4>{{ proposal.title }}</h4>
+    </router-link>
     <p>{{ formatDescription(proposal.description) }}</p>
     <div class="proposal-details">
       <p><strong>Status:</strong> {{ proposal.status }}</p>
@@ -34,6 +36,10 @@ export default {
 .proposal-item {
   padding: 8px;
   margin: 16px;
+}
+
+.proposal-item a {
+  color: white;
 }
 
 .proposal-details {
