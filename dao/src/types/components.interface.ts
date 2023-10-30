@@ -305,3 +305,26 @@ export interface ThresholdQuorum {
 export interface ThresholdQuorumResponse {
   threshold_quorum: ThresholdQuorum;
 }
+
+export interface TotalWeight {
+  weight: number
+}
+
+export type UnstakeClaim = {
+  amount: string;
+  release_at: {
+    at_time: string;
+  };
+};
+
+export type UnstakeClaimResponse = {
+  claims: UnstakeClaim[];
+};
+
+export type StakeData = {
+  stake: string;
+  denom: {
+    native: string;
+  };
+};
+

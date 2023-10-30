@@ -305,10 +305,39 @@ export const useClientStore = defineStore({
     async fetchTradeDetail(tradeId: number) {
       return await this.client.fetchTradeDetail(tradeId)
     },
+    async fetchTotalStaked() {
+      return await this.client.fetchTotalStaked()
+    },
+    async fetchStakedByAddress(address: string) {
+      return await this.client.fetchStakedByAddress(address)
+    },
+    async fetchUnstakeClaims(address: string) {
+      return await this.client.fetchUnstakeClaims(address)
+    },
     async castVote(vote: VoteType, proposalId: number) {
       this.loadingState = LoadingState.show('Casting vote...')
       try {
         await this.client.castVote(vote, proposalId)
+      } catch (e) {
+        this.handle.error(e)
+      } finally {
+        this.loadingState = LoadingState.dismiss()
+      }
+    },
+    async bond(amount: number) {
+      this.loadingState = LoadingState.show('Bonding...')
+      try {
+        await this.client.bond(amount)
+      } catch (e) {
+        this.handle.error(e)
+      } finally {
+        this.loadingState = LoadingState.dismiss()
+      }
+    },
+    async unbond(amount: number) {
+      this.loadingState = LoadingState.show('Unbonding...')
+      try {
+        await this.client.unbond(amount)
       } catch (e) {
         this.handle.error(e)
       } finally {

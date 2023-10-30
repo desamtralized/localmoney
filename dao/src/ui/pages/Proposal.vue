@@ -11,8 +11,8 @@ const votes = ref<Vote[]>([])
 const route = useRoute()
 
 function formatTimestamp(timestamp) {
-      const date = new Date(timestamp / 1000000); // Convert microseconds to milliseconds
-      return date.toLocaleString();
+  const date = new Date(timestamp / 1000000); // Convert microseconds to milliseconds
+  return date.toLocaleString();
 }
 
 function calculateVotePercentage(voteType) {

@@ -22,13 +22,16 @@ import type {
   Profile,
   Proposal,
   ProposalsData,
+  StakeData,
   ThresholdQuorum,
   ThresholdQuorumResponse,
+  TotalWeight,
   TradeInfo,
+  UnstakeClaim,
   Vote,
   VoteType,
 } from '~/types/components.interface'
-import { DAO_MULTISIG } from '~/utils/constants'
+import { DAO_DENOM, DAO_MULTISIG, DAO_STAKING } from '~/utils/constants'
 import { denomToValue } from '~/utils/denom'
 
 export class CosmosChain implements Chain {
@@ -578,6 +581,45 @@ export class CosmosChain implements Chain {
     }
   }
 
+  async fetchUnstakeClaims(address: string): Promise<UnstakeClaim[]> {
+    try {
+      if (!this.cwClient) {
+        await this.init()
+      }
+      const queryMsg = { claims: { address } }
+      const response = (await this.cwClient!.queryContractSmart(DAO_STAKING, queryMsg)).claims as UnstakeClaim[]
+      return response
+    } catch (e) {
+      throw DefaultError.fromError(e)
+    }
+  }
+
+  async fetchStakedByAddress(address: string): Promise<StakeData> {
+    try {
+      if (!this.cwClient) {
+        await this.init()
+      }
+      const queryMsg = { staked: { address } }
+      const response = (await this.cwClient!.queryContractSmart(DAO_STAKING, queryMsg)) as StakeData
+      return response
+    } catch (e) {
+      throw DefaultError.fromError(e)
+    }
+  }
+  
+  async fetchTotalStaked(): Promise<TotalWeight> {
+    try {
+      if (!this.cwClient) {
+        await this.init()
+      }
+      const queryMsg = { total_weight: {} }
+      const response = (await this.cwClient!.queryContractSmart(DAO_STAKING, queryMsg)) as TotalWeight
+      return response
+    } catch (e) {
+      throw DefaultError.fromError(e)
+    }
+  }
+
   async castVote(vote: VoteType, proposalId: number) {
     const msg = {vote: { 
       vote: vote,
@@ -598,6 +640,44 @@ export class CosmosChain implements Chain {
       }
     } else {
       throw new WalletNotConnected()
+    }
+  }
+
+  async bond(amount: number) {
+    const msg = {bond: {}};
+    if (this.cwClient instanceof SigningCosmWasmClient && this.signer) {
+      try {
+        const result = await this.cwClient.execute(
+          this.getWalletAddress(),
+          DAO_STAKING,
+          msg,
+          'auto',
+          undefined,
+          [{amount: (amount*1000000).toString(), denom: DAO_DENOM}]
+        )
+        console.log('Bond result >> ', result)
+      } catch (e) {
+        throw DefaultError.fromError(e)
+      }
+    }
+  }
+
+  async unbond(amount: number) {
+    console.log('unbound amount', amount)
+    const msg = {unbond: {tokens: amount.toString()}};
+    console.log('msg', msg)
+    if (this.cwClient instanceof SigningCosmWasmClient && this.signer) {
+      try {
+        const result = await this.cwClient.execute(
+          this.getWalletAddress(),
+          DAO_STAKING,
+          msg,
+          'auto'
+        )
+        console.log('Unbond result >> ', result)
+      } catch (e) {
+        throw DefaultError.fromError(e)
+      }
     }
   }
 

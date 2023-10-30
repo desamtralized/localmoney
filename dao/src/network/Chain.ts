@@ -21,9 +21,13 @@ import type {
   PostOffer,
   Profile,
   Proposal,
+  StakeData,
   ThresholdQuorum,
   ThresholdQuorumResponse,
+  TotalWeight,
   TradeInfo,
+  UnstakeClaim,
+  UnstakeClaimResponse,
   Vote,
   VoteType,
 } from '~/types/components.interface'
@@ -96,6 +100,16 @@ export interface Chain {
   fetchThreshold(): Promise<ThresholdQuorum>
 
   castVote(vote: VoteType, proposalId: number): Promise<void>
+
+  fetchTotalStaked(): Promise<TotalWeight>
+
+  fetchStakedByAddress(address: string): Promise<StakeData>
+
+  fetchUnstakeClaims(address: string): Promise<UnstakeClaim[]>
+
+  bond(amount: number): Promise<void>
+
+  unbond(amount: number): Promise<void>
 }
 
 export enum ChainClient {
