@@ -1,0 +1,26 @@
+@import "tokens.scss";
+@import "elements.scss";
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 40px;
+  margin-top: 100px;
+
+  @media only screen and (max-width: $mobile) {margin-top: 0px;}
+}
+
+.page-wide {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 0 24px 40px;
+}
+
+h3 {
+  margin: 32px 0;
+  font-size: 18px;
+  font-weight: $semi-bold;
+}
+
+* {
+  transition: all;
+}

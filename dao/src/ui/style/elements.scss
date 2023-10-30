@@ -1,0 +1,348 @@
+@import "tokens.scss";
+
+body {
+  &::-webkit-scrollbar {
+    width: 8px;
+    background: $gray100;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $gray300;
+    border-radius: 56px;
+  }
+}
+
+.body-no-scroll {
+  overflow-y: hidden;
+}
+
+.card {
+  padding: 24px;
+  background-color: $gray200;
+  border: 1px solid $border;
+  border-radius: 8px;
+  box-shadow: 0px 2px 25px rgba(0, 0, 0, 0.05);
+}
+
+.card-active {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.offer {
+  
+  &.collapsed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  @include responsive(mobile) {
+    flex-direction: column;
+  }
+
+  .maker {
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+
+    @include responsive(mobile) {
+      width: 100%;
+      flex-direction: row;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .wallet-addr {
+      font-size: 16px;
+      font-weight: 600;
+      color: $base-text;
+    }
+
+    .n-trades {
+      font-size: 14px;
+      color: $gray700;
+      margin-top: 4px;
+    }
+  }
+
+  .inner-wrap {
+    width: 80%;
+    display: flex;
+    justify-content: space-between;
+    gap: 32px;
+
+    @include responsive(mobile) {
+      width: 100%;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .info {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 32px;
+
+      @include responsive(mobile) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .divider {
+        height: 40px;
+        width: 1px;
+        background-color: $border;
+        @include responsive(mobile) {
+          display: none;
+        }
+      }
+
+      .wrap {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+
+      .wrap,
+      .description {
+        @include responsive(mobile) {
+          width: 100%;
+          padding: 12px 16px;
+          background-color: $gray150;
+          border-radius: 8px;
+        }
+        .label {
+          margin-bottom: 4px;
+          font-size: 12px;
+          color: $gray700;
+        }
+        .limit,
+        .content {
+          font-size: 14px;
+          color: $gray900;
+        }
+      }
+    }
+
+    .price {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      text-align: right;
+      gap: 32px;
+      flex-shrink: 0;
+
+      @include responsive(mobile) {
+        text-align: left;
+        justify-content: space-between;
+      }
+
+      .value {
+        font-size: 20px;
+        font-weight: 800;
+        color: $base-text;
+      }
+      .margin {
+        font-size: 14px;
+        color: $gray700;
+      }
+    }
+  }
+}
+}
+
+.buy-sell {
+  display: inline-flex;
+  justify-content: space-evenly;
+  width: 100%;
+  height: 40px;
+  max-width: 200px;
+  margin-top: 26px;
+  background-color: $surface;
+  border: 1px solid $border;
+  border-radius: 8px;
+  overflow: hidden;
+
+  .separator {
+    width: 1px;
+    height: 40px;
+    background-color: $border;
+    margin: 0px;
+    z-index: 999;
+  }
+
+  button {
+    width: 100%;
+    height: 40px;
+    justify-content: center;
+    background-color: inherit;
+    border-radius: none;
+    color: $gray600;
+  }
+
+  .focus {
+    background-color: $gray300;
+    border-radius: 0px;
+    color: $primary;
+  }
+
+  @media only screen and (max-width: $mobile) {
+    margin-top: 0;
+    height: 48px;
+    max-width: none;
+    margin-bottom: 16px;
+    border: 0;
+    overflow: visible;
+
+    button {
+      height: 48px;
+      border-radius: 8px;
+    }
+    .separator {
+      height: 0;
+    }
+    .focus {
+      border-radius: 8px;
+    }
+  }
+}
+
+input {
+  width: 100%;
+  height: 48px;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: $base-text;
+  padding: 10px 16px;
+  appearance: none;
+  outline: none;
+}
+
+textarea {
+  width: 100%;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: $base-text;
+  padding: 10px 16px;
+  appearance: none;
+  outline: none;
+}
+
+select {
+  width: 100%;
+  height: 48px;
+  background-color: inherit;
+  border-radius: 8px;
+  border: 1px solid $border;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: $base-text;
+  padding: 10px 16px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='none' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M6 9L12 15L18 9' stroke='gray' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position-x: 95%;
+  background-position-y: 11px;
+
+  @media only screen and (max-width: $mobile) {
+    height: 48px;
+    background-position-y: 11px;
+  }
+
+  &.bg-gray100 {
+    background-color: $gray100;
+  }
+  &.bg-gray150 {
+    background-color: $gray150;
+  }
+  &.bg-gray300 {
+    background-color: $gray300;
+  }
+  &.bg-surface {
+    background-color: $surface;
+  }
+}
+
+// BUTTONS
+
+button {
+  height: 40px;
+  font-size: 14px;
+  line-height: 0px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+
+  // Button Types
+  &.primary {
+    font-size: 16px;
+    background-color: $surface;
+    color: $primary;
+  }
+
+  &.secondary {
+    font-size: 16px;
+    background-color: inherit;
+    color: $base-text;
+  }
+
+  &.tertiary {
+    font-size: 16px;
+    background-color: $surface;
+    color: $base-text;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    color: $gray600;
+  }
+
+  &.wallet {
+    font-size: 16px;
+    font-weight: 700;
+    background-color: $surface;
+    color: $base-text;
+
+    p {
+      margin-right: 16px;
+    }
+  }
+
+  // Text Position
+  &.center-text {
+    display: flex;
+    justify-content: center;
+  }
+
+  // Background Color
+  &.bg-gray300 {
+    background-color: $gray300;
+  }
+  &.bg-gray600 {
+    background-color: $gray600;
+  }
+  &.bg-surface {
+    background-color: $surface;
+  }
+
+  // Text Color
+  &.clr-base-text,
+  &.clr-base-text p {
+    color: $base-text;
+  }
+
+  &.clr-primary,
+  &.clr-primary p {
+    color: $primary;
+  }
+}
