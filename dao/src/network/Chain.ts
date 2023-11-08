@@ -112,6 +112,8 @@ export interface Chain {
 
   unbond(amount: number): Promise<void>
 
+  claim(): Promise<void>
+
   propose(proposal: NewProposal): Promise<void>
 }
 

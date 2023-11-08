@@ -25,14 +25,11 @@ function formatNumberWithThousand(number: number) {
 
 function fetchStaking() {
   nextTick(async() => {
+    totalStaked.value = await client.fetchTotalStaked()
     if (typeof userWallet.value.address === 'string' && userWallet.value.address.length > 1)  {
       unstakeClaims.value = await client.fetchUnstakeClaims(userWallet.value.address);
       myStake.value = await client.fetchStakedByAddress(userWallet.value.address);
     }
-    totalStaked.value = await client.fetchTotalStaked()
-    console.log('Total Staked', totalStaked.value)
-    console.log('My Stake', myStake.value)
-    console.log('Unstake Claims', unstakeClaims.value)
   })
 }
 
@@ -42,6 +39,13 @@ onBeforeMount(() => {
 
 function onRefresh() {
   fetchStaking();
+}
+
+function claim() {
+  nextTick(async () => {
+    await client.claim()
+    await onRefresh()
+  });
 }
 
 watch(userWallet, () => {
@@ -70,7 +74,7 @@ watch(userWallet, () => {
     <div class="row">
       <div class="card">
         <h3>Pending Unstake Claims</h3>
-        <UnstakeClaims :unstakeClaims="unstakeClaims" />
+        <UnstakeClaims :unstakeClaims="unstakeClaims" :claim="claim" />
       </div>
     </div>
     <div>

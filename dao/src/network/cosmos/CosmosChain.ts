@@ -681,6 +681,23 @@ export class CosmosChain implements Chain {
       }
     }
   }
+
+  async claim() {
+    const msg = {claim: {}};
+    if (this.cwClient instanceof SigningCosmWasmClient && this.signer) {
+      try {
+        const result = await this.cwClient.execute(
+          this.getWalletAddress(),
+          DAO_STAKING,
+          msg,
+          'auto'
+        )
+        console.log('Claim result >> ', result)
+      } catch (e) {
+        throw DefaultError.fromError(e)
+      }
+    }
+  }
   
   async propose(proposal: NewProposal): Promise<void> {
     const msg = {propose: proposal};

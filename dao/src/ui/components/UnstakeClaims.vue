@@ -8,6 +8,9 @@
         <div>
           <strong>Unstake At Time:</strong> {{ formatTimeStamp(claim.release_at.at_time) }}
         </div>
+        <div v-if="claim.release_at.at_time < (new Date().getTime() * 1000000)">
+          <button class="claim" @click="this.claim()">Claim</button>
+        </div>
       </li>
     </ul>
   </div>
@@ -20,6 +23,10 @@ export default {
       type: Array,
       required: true,
     },
+    claim: {
+      type: Function,
+      required: true,
+    },
   },
   methods: {
     formatTimeStamp(timestamp) {
@@ -28,7 +35,10 @@ export default {
     },
     formatAmount(amount) {
       return Number(amount)/1000000;
-    }
+    },
+    claim() {
+      props.claim();
+    },
   }
 };
 </script>

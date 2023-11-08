@@ -345,6 +345,16 @@ export const useClientStore = defineStore({
         this.loadingState = LoadingState.dismiss()
       }
     },
+    async claim() {
+      this.loadingState = LoadingState.show('Claiming...')
+      try {
+        await this.client.claim()
+      } catch (e) {
+        this.handle.error(e)
+      } finally {
+        this.loadingState = LoadingState.dismiss()
+      }
+    },
     async propose(proposal: NewProposal) {
       this.loadingState = LoadingState.show('Proposing...')
       try {
