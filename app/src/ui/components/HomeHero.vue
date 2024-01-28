@@ -20,11 +20,10 @@ onUnmounted(() => {
   <section class="page">
     <div class="wrap-hero">
       <div class="wrap-title">
-        <h1 class="title">
-          {{ t('intro.welcome') }}
-        </h1>
+        <h1 class="title"><span class="text-primary">$LUNA</span>'s native fiat ramp</h1>
         <p class="sub-title">
-          <span class="text-primary">Local</span> is a decentralized P2P marketplace for the crypto multi-chain world.
+          Your Gateway to the Decentralized Economy: Swap <span class="text-primary">$LUNA</span> for Fiat in an Open
+          Marketplace.
         </p>
         <div class="wrap-cta">
           <div class="wrap-btns">
@@ -199,13 +198,15 @@ h1 {
   font-size: 20px;
   font-weight: 400;
   margin-bottom: 32px;
-
-  .text-primary {
-    color: $primary;
-    font-weight: 600;
-  }
+}
+.text-primary {
+  color: $primary;
+  font-weight: 600;
 }
 
+.strong {
+  font-weight: 600;
+}
 .wrap-cta {
   .wrap-btns {
     display: flex;

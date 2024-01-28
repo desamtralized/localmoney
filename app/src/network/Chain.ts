@@ -7,6 +7,7 @@ import {
   KUJIRA_TESTNET_HUB_INFO,
 } from './cosmos/config/kujira'
 import { DEV_CONFIG, DEV_HUB_INFO } from './cosmos/config/dev'
+import { TERRA_CONFIG, TERRA_HUB_INFO } from './cosmos/config/terra'
 import type {
   Addr,
   Arbitrator,
@@ -26,6 +27,8 @@ import { CosmosChain } from '~/network/cosmos/CosmosChain'
 
 export interface Chain {
   init(): void
+
+  getName(): string
 
   connectWallet(): Promise<void>
 
@@ -87,6 +90,7 @@ export enum ChainClient {
   kujiraMainnet = 'KUJIRA_MAINNET',
   juno = 'JUNO',
   dev = 'DEV',
+  terra = 'TERRA',
 }
 
 // Centralized place to instantiate chain client and inject dependencies if needed
@@ -100,5 +104,7 @@ export function chainFactory(client: ChainClient): Chain {
       return new CosmosChain(JUNO_TESTNET_CONFIG, JUNO_TESTNET_HUB_INFO)
     case ChainClient.dev:
       return new CosmosChain(DEV_CONFIG, DEV_HUB_INFO)
+    case ChainClient.terra:
+      return new CosmosChain(TERRA_CONFIG, TERRA_HUB_INFO)
   }
 }

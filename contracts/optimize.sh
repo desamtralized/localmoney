@@ -2,7 +2,7 @@
 set -e
 
 # Version that supports arm and x86_64
-V=0.12.8
+V=0.12.13
 
 # Gets the machine architecture
 M=$(uname -m)

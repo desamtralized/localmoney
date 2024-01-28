@@ -8,11 +8,24 @@ import './ui/style/reset.scss'
 import 'vue-toastification/dist/index.css'
 
 const client = useClientStore()
-client.setClient(ChainClient.kujiraMainnet) // required to properly init chain
+client.setClient(ChainClient.terra) // required to properly init chain
 const loading = computed(() => client.loadingState)
 
+let title: string
+switch (client.chainClient) {
+  case ChainClient.kujiraMainnet:
+    title = 'Local Money'
+    break
+  case ChainClient.terra:
+    title = 'LunaPay - Powered by Local Money'
+    break
+  default:
+    title = 'Local Money - TESTNET'
+    break
+}
+
 useHead({
-  title: client.chainClient === ChainClient.kujiraMainnet ? 'Local Money' : 'Local Money - TESTNET',
+  title,
   meta: [
     {
       name: 'description',

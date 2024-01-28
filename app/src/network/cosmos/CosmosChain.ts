@@ -25,7 +25,7 @@ import type {
 import { denomToValue } from '~/utils/denom'
 
 export class CosmosChain implements Chain {
-  protected config: CosmosConfig
+  public config: CosmosConfig
   protected hubInfo: HubInfo
 
   protected signer?: OfflineSigner | OfflineDirectSigner
@@ -43,6 +43,10 @@ export class CosmosChain implements Chain {
       config: {},
     })) as HubConfig
     // console.log("Factory config >> ", this.hubInfo.hubConfig)
+  }
+
+  getName() {
+    return this.config.chainName
   }
 
   async connectWallet() {

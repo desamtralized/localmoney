@@ -5,7 +5,7 @@ import { useClientStore } from '~/stores/client'
 import { ChainClient } from '~/network/Chain'
 
 const client = useClientStore()
-const badge = computed(() => (client.chainClient === ChainClient.kujiraMainnet ? 'Mainnet' : 'Testnet'))
+const badge = computed(() => client.client.getName())
 // TODO - Make isMobile global
 const width = ref(window.innerWidth)
 const listener = () => {
@@ -71,8 +71,8 @@ header {
       align-content: center;
 
       .logo {
-        width: 220px;
-        height: 42px;
+        width: 209px;
+        height: 54px;
         background-size: cover;
         background-image: $logo-horizontal-dark;
       }

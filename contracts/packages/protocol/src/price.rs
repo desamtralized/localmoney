@@ -77,3 +77,39 @@ pub fn query_fiat_price_for_denom<T: CustomQuery>(
 ) -> StdResult<DenomFiatPrice> {
     querier.query_wasm_smart(price_contract, &QueryMsg::Price { fiat, denom })
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SwapSimulation {
+    pub simulation: Simulation,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct Simulation {
+    pub offer_asset: OfferAsset,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct OfferAsset {
+    pub info: AssetInfo,
+    pub amount: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct AssetInfo {
+    pub native_token: NativeToken,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct NativeToken {
+    pub denom: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SimulationResponse {
+    pub data: SimulationResponseData,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct SimulationResponseData {
+    pub return_amount: Uint128,
+}
