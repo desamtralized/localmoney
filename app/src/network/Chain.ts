@@ -6,6 +6,7 @@ import {
   KUJIRA_TESTNET_CONFIG,
   KUJIRA_TESTNET_HUB_INFO,
 } from './cosmos/config/kujira'
+import { NEUTRON_CONFIG, NEUTRON_HUB_INFO } from './cosmos/config/neutron'
 import { DEV_CONFIG, DEV_HUB_INFO } from './cosmos/config/dev'
 import { TERRA_CONFIG, TERRA_HUB_INFO } from './cosmos/config/terra'
 import type {
@@ -91,6 +92,7 @@ export enum ChainClient {
   juno = 'JUNO',
   dev = 'DEV',
   terra = 'TERRA',
+  neutron = 'NEUTRON',
 }
 
 // Centralized place to instantiate chain client and inject dependencies if needed
@@ -102,6 +104,8 @@ export function chainFactory(client: ChainClient): Chain {
       return new CosmosChain(KUJIRA_MAINNET_CONFIG, KUJIRA_MAINNET_HUB_INFO)
     case ChainClient.juno:
       return new CosmosChain(JUNO_TESTNET_CONFIG, JUNO_TESTNET_HUB_INFO)
+    case ChainClient.neutron:
+      return new CosmosChain(NEUTRON_CONFIG, NEUTRON_HUB_INFO)
     case ChainClient.dev:
       return new CosmosChain(DEV_CONFIG, DEV_HUB_INFO)
     case ChainClient.terra:
