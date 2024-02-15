@@ -35,7 +35,7 @@ import type {
 } from '~/types/components.interface'
 import { DAO_DENOM, DAO_MULTISIG, DAO_STAKING, WHLOCALICS20TERRA2, WHLOCAL_TERRA2 } from '~/utils/constants'
 import { denomToValue } from '~/utils/denom'
-import { Buffer } from 'buffer';
+import { Buffer } from 'buffer'
 
 // @ts-ignore
 window.Buffer = Buffer;
