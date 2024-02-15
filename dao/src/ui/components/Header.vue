@@ -2,10 +2,10 @@
 import NavDesktop from './NavDesktop.vue'
 import NavMobile from './NavMobile.vue'
 import { useClientStore } from '~/stores/client'
-import { ChainClient } from '~/network/Chain'
+import { ChainName } from '~/network/Chain'
 
 const client = useClientStore()
-const badge = computed(() => (client.chainClient === ChainClient.kujiraMainnet ? 'Mainnet' : 'Testnet'))
+const badge = computed(() => (client.chainClient === ChainName.kujiraMainnet ? 'Mainnet' : 'Testnet'))
 // TODO - Make isMobile global
 const width = ref(window.innerWidth)
 const listener = () => {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useClientStore } from '~/stores/client'
-import { ChainClient } from '~/network/Chain'
+import { ChainName } from '~/network/Chain'
 import { Page, trackPage } from '~/analytics/analytics'
 import type { Profile } from '~/types/components.interface'
 import { formatAddress, formatDate, timeSince } from '~/shared'
@@ -23,7 +23,7 @@ const createdAt = computed(() => {
   return profile.value ? `${formatDate(date, false, false)}` : 'loading...'
 })
 const finder = computed(() => {
-  if (client.chainClient === ChainClient.kujiraMainnet) {
+  if (client.chainClient === ChainName.kujiraMainnet) {
     return `kaiyo-1/address/${maker.value}`
   } else {
     return `harpoon-4/address/${maker.value}`

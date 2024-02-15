@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useClientStore } from '~/stores/client'
 import { formatAddress, formatAmount } from '~/shared'
-import { ChainClient } from '~/network/Chain'
+import { ChainName } from '~/network/Chain'
 
 const emit = defineEmits<{ (e: 'disconnect'): void }>()
 
@@ -15,7 +15,7 @@ const localBalance = computed(() => {
 })
 
 const finder = computed(() => {
-  if (client.chainClient === ChainClient.kujiraMainnet) {
+  if (client.chainClient === ChainName.kujiraMainnet) {
     return `kaiyo-1/address/${userWallet.value.address}`
   } else {
     return `harpoon-4/address/${userWallet.value.address}`

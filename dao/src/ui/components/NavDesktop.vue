@@ -43,6 +43,22 @@ const enableMyOffersNav = computed(() => enableMyOffers(userWallet.value))
         </router-link>
       </li>
 
+      <li class="item">
+        <router-link to="/migration">
+          <svg class="icon-24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M3 3H21C21.5304 3 22.0391 3.21071 22.4142 3.58579C22.7893 3.96086 23 4.46957 23 5V19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3V3Z"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path d="M8 12L12 16L16 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12 16V8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <p>Migration</p>
+        </router-link>
+      </li>
+
       <li v-if="enableDisputesNav" class="item">
         <router-link to="/arbitration">
           <svg

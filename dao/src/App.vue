@@ -2,17 +2,17 @@
 // https://github.com/vueuse/head
 // you can use this to manipulate the document head in any components,
 // they will be rendered correctly in the html results with vite-ssg
-import { ChainClient } from '~/network/Chain'
+import { ChainName } from '~/network/Chain'
 import { useClientStore } from '~/stores/client'
 import './ui/style/reset.scss'
 import 'vue-toastification/dist/index.css'
 
 const client = useClientStore()
-client.setClient(ChainClient.kujiraMainnet) // required to properly init chain
+client.setClient(ChainName.kujiraMainnet) // required to properly init chain
 const loading = computed(() => client.loadingState)
 
 useHead({
-  title: client.chainClient === ChainClient.kujiraMainnet ? 'Local DAO' : 'Local DAO - TESTNET',
+  title: client.chainClient === ChainName.kujiraMainnet ? 'Local DAO' : 'Local DAO - TESTNET',
   meta: [
     {
       name: 'description',

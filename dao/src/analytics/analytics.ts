@@ -3,7 +3,7 @@ import mixpanel from 'mixpanel-browser'
 import type { GetOffer, PatchOffer, PostOffer, Trade } from '~/types/components.interface'
 import { denomToValue, microDenomToDisplay } from '~/utils/denom'
 import { CRYPTO_DECIMAL_PLACES } from '~/utils/constants'
-import type { ChainClient } from '~/network/Chain'
+import type { ChainName } from '~/network/Chain'
 
 const TRADE = 'trade'
 
@@ -71,7 +71,7 @@ export interface TradeData {
   trade_taker: string
 }
 
-export function toTradeData(trade: Trade, offer: GetOffer, chainClient: ChainClient): TradeData {
+export function toTradeData(trade: Trade, offer: GetOffer, chainClient: ChainName): TradeData {
   let trade_maker: string
   let trade_taker: string
 
@@ -112,7 +112,7 @@ export interface OfferData {
   offer_rate?: string
 }
 
-export function toOfferData(offerId: number, offer: PostOffer | PatchOffer, chainClient: ChainClient): OfferData {
+export function toOfferData(offerId: number, offer: PostOffer | PatchOffer, chainClient: ChainName): OfferData {
   const offer_denom = 'denom' in offer ? microDenomToDisplay(denomToValue(offer.denom), chainClient) : undefined
   return {
     offer_id: offerId,

@@ -30,6 +30,7 @@ declare module '@vue/runtime-core' {
     ListOffers: typeof import('./ui/components/offers/ListOffers.vue')['default']
     Loading: typeof import('./ui/components/commons/Loading.vue')['default']
     Maker: typeof import('./ui/pages/Maker.vue')['default']
+    Migration: typeof import('./ui/pages/Migration.vue')['default']
     Modal: typeof import('./ui/components/commons/Modal.vue')['default']
     ModalLoading: typeof import('./ui/components/commons/ModalLoading.vue')['default']
     NavDesktop: typeof import('./ui/components/NavDesktop.vue')['default']

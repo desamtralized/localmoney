@@ -2,9 +2,9 @@ import type { GetOffer, Trade } from '~/types/components.interface'
 import { checkMicroDenomAvailable, denomToValue } from '~/utils/denom'
 import { checkFiatAvailable } from '~/utils/fiat'
 import { TradeState } from '~/types/components.interface'
-import { ChainClient } from '~/network/Chain'
+import { ChainName } from '~/network/Chain'
 
-export function checkValidOffer(offer: GetOffer, chainClient: ChainClient = ChainClient.kujiraMainnet): boolean {
+export function checkValidOffer(offer: GetOffer, chainClient: ChainName = ChainName.kujiraMainnet): boolean {
   return checkMicroDenomAvailable(denomToValue(offer.denom), chainClient) && checkFiatAvailable(offer.fiat_currency)
 }
 

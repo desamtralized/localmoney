@@ -16,8 +16,9 @@ export const useNotificationStore = defineStore({
   actions: {
     async fetchNotifications(limit = 100, last?: number) {
       await this.cleanNotification()
-      let trades = await this.client.client.fetchTrades(limit, last)
-      const disputes = await this.client.client.fetchDisputedTrades(limit, last)
+      const chainClient = this.client.clients.get(this.client.defaultChainName)!
+      let trades = await chainClient.fetchTrades(limit, last)
+      const disputes = await chainClient.fetchDisputedTrades(limit, last)
       const openDisputes = disputes.openDisputes.length > 0 ? disputes.openDisputes : []
       trades = trades.concat(openDisputes)
       const wallet = this.client.userWallet.address

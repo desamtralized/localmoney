@@ -22,5 +22,11 @@
       "display": "DEMO",
       "icon": "/tokens/kuji.png"
     }
+  },
+  "terra": {
+    "uluna": {
+      "icon": "/tokens/luna.png",
+      "display": "LUNA"
+    }
   }
 }

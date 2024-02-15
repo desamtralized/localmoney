@@ -310,6 +310,10 @@ export interface TotalWeight {
   weight: number
 }
 
+export interface CW20Balance {
+  balance: string
+}
+
 export type UnstakeClaim = {
   amount: string;
   release_at: {

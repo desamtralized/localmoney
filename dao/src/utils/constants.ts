@@ -6,3 +6,5 @@ export const CRYPTO_DECIMAL_PLACES = 1000000
 export const DAO_DENOM = "factory/kujira1swkuyt08z74n5jl7zr6hx0ru5sa2yev5v896p6/local"
 export const DAO_STAKING = "kujira1dunea8kv50lvv58x3h6wds0k260gsu9ephze9jkckh7drd4tl0vsvhsr7j"
 export const DAO_MULTISIG = "kujira1vc98u3s2r4z45yhfhugwqw9dd952e0wn6l4wqrr7wq8txrzcgz4qgmxrej"
+export const WHLOCAL_TERRA2 = "terra1xzkel96e5e8vfmqw7valzdzzv9hqasfyslclvnmvxdejvpda3xwsskxzus"
+export const WHLOCALICS20TERRA2 = "terra1d90p5lacfxnqgjxjupu234lxnxyeu8fdeef4d0e0nqy3p30r7gss4myn9x"

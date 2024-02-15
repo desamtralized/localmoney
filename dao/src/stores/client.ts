@@ -3,12 +3,13 @@ import { useLocalStorage } from '@vueuse/core'
 import type { Coin } from '@cosmjs/stargate'
 import axios from 'axios'
 import { ListResult } from './ListResult'
-import { ChainClient, chainFactory } from '~/network/Chain'
+import { Chain, ChainName, chainFactory } from '~/network/Chain'
 import type { ChainError } from '~/network/chain-error'
 import { WalletNotConnected } from '~/network/chain-error'
 import type {
   Addr,
   Arbitrator,
+  CW20Balance,
   Denom,
   FetchOffersArgs,
   FiatCurrency,
@@ -30,8 +31,9 @@ import { LoadingState, OfferState, TradeState } from '~/types/components.interfa
 import type { Secrets } from '~/utils/crypto'
 import { encryptData, generateKeys } from '~/utils/crypto'
 import { denomToValue } from '~/utils/denom'
-import { CRYPTO_DECIMAL_PLACES } from '~/utils/constants'
+import { CRYPTO_DECIMAL_PLACES, WHLOCALICS20TERRA2 } from '~/utils/constants'
 import { OfferEvents, TradeEvents, toOfferData, toTradeData, trackOffer, trackTrade } from '~/analytics/analytics'
+import { CosmosChain } from '~/network/cosmos/CosmosChain'
 
 const LIMIT_ITEMS_PER_PAGE = 10
 
@@ -39,13 +41,14 @@ export const useClientStore = defineStore({
   id: 'client',
   state: () => {
     return {
-      chainClient: <ChainClient>ChainClient.kujiraTestnet, // TODO call setClient in the App.vue setup function to properly init a chain adapter
-      client: chainFactory(ChainClient.kujiraTestnet),
+      defaultChainName: <ChainName>ChainName.dev,
+      clients: new Map<ChainName, Chain>(),
       applicationConnected: useLocalStorage('walletAlreadyConnected', false),
       userWallet: <UserWallet>{ isConnected: false, address: 'undefined' },
       secrets: useLocalStorage('secrets', new Map<string, Secrets>()),
       profile: <Profile>{},
       localBalance: <Coin>{},
+      whLocalTerra2Balance: <CW20Balance>{},
       fiatPrices: new Map<String, Map<String, number>>(),
       offers: <ListResult<OfferResponse>>ListResult.loading(),
       makerOffers: <ListResult<OfferResponse>>ListResult.loading(),
@@ -61,22 +64,24 @@ export const useClientStore = defineStore({
   actions: {
     /**
      * Set the blockchain
-     * @param {ChainClient} chainClient - The Blockchain backend to connect to
+     * @param {ChainName} chainName - The Blockchain backend to connect to
      */
-    async setClient(chainClient: ChainClient) {
+    async setClient(chainName: ChainName) {
       this.$reset()
       // TODO disconnect old chain adapter
-      this.chainClient = chainClient
-      this.client = chainFactory(this.chainClient)
-      await this.client.init()
+      this.defaultChainName = chainName
+      const chainClient = chainFactory(chainName)
+      this.clients.set(chainName, chainClient)
+      await chainClient.init()
       if (this.applicationConnected) {
         await this.connectWallet()
       }
     },
     async connectWallet() {
       try {
-        await this.client.connectWallet()
-        const address = this.client.getWalletAddress()
+        const chainClient = this.clients.get(this.defaultChainName)!
+        await chainClient.connectWallet()
+        const address = chainClient.getWalletAddress()
         await this.syncSecrets(address)
         this.userWallet = { isConnected: true, address }
         await this.fetchBalances()
@@ -93,24 +98,40 @@ export const useClientStore = defineStore({
     async fetchLocalBalance() {
       // Todo we should change this to get the LOCAL denom from some config
       let localDenom: Denom
-      if (this.chainClient === ChainClient.kujiraMainnet) {
+      if (this.defaultChainName === ChainName.kujiraMainnet) {
         localDenom = { native: 'factory/kujira1swkuyt08z74n5jl7zr6hx0ru5sa2yev5v896p6/local' }
       } else {
         localDenom = { native: 'factory/kujira12w0ua4eqnkk0aahtnjlt6h3dhxael6x25s507w/local' }
       }
 
-      this.localBalance = await this.client.fetchTokenBalance(localDenom)
-    },
+      if (this.defaultChainName === ChainName.kujiraMainnet) {
+        const kujiraClient = this.clients.get(ChainName.kujiraMainnet)! as CosmosChain
+        this.localBalance = await kujiraClient.fetchTokenBalance(localDenom)
+      }
+
+      let terraClient = this.clients.get(ChainName.terra) as CosmosChain
+      if (!terraClient) {
+        terraClient = chainFactory(ChainName.terra) as CosmosChain
+        this.clients.set(ChainName.terra, terraClient)
+        terraClient.init()
+        await terraClient.connectWallet()
+        this.whLocalTerra2Balance = await terraClient.fetchWHLocalTerra2Balance()
+        console.log('whLocalTerra2Balance: ', this.whLocalTerra2Balance)
+      }
+    }, 
     async disconnectWallet() {
-      await this.client.disconnectWallet()
+      // iterate over clients and disconnect
+      for (const client of this.clients.values()) {
+        await client.disconnectWallet()
+      }
       this.userWallet = { isConnected: false, address: 'undefined' }
       this.applicationConnected = false
     },
     getHubConfig(): HubConfig {
-      return this.client.getHubConfig()
+      return this.clients.get(this.defaultChainName)!.getHubConfig()
     },
     async fetchProfile() {
-      this.profile = await this.client.fetchProfile()
+      this.profile = await this.clients.get(this.defaultChainName)!.fetchProfile()
     },
     async syncSecrets(address: string) {
       await this.fetchProfile()
@@ -129,12 +150,12 @@ export const useClientStore = defineStore({
       return userSecrets!
     },
     async fetchMakerProfile(maker: Addr) {
-      return await this.client.fetchProfile(maker)
+      return await this.clients.get(this.defaultChainName)!.fetchProfile(maker)
     },
     async fetchMakerOffers(maker: Addr) {
       this.makerOffers = ListResult.loading()
       try {
-        let offers = await this.client.fetchMakerOffers(maker)
+        let offers = await this.clients.get(this.defaultChainName)!.fetchMakerOffers(maker)
         offers = offers.filter(({ offer }) => offer.state === OfferState.active)
         for (const { offer } of offers) {
           await this.updateFiatPrice(offer.fiat_currency, offer.denom)
@@ -147,7 +168,7 @@ export const useClientStore = defineStore({
     async fetchOffers(offersArgs: FetchOffersArgs) {
       this.offers = ListResult.loading()
       try {
-        const offers = await this.client.fetchOffers(offersArgs, LIMIT_ITEMS_PER_PAGE)
+        const offers = await this.clients.get(this.defaultChainName)!.fetchOffers(offersArgs, LIMIT_ITEMS_PER_PAGE)
         this.offers = ListResult.success(offers, LIMIT_ITEMS_PER_PAGE)
       } catch (e) {
         this.offers = ListResult.error(e as ChainError)
@@ -158,7 +179,7 @@ export const useClientStore = defineStore({
     async fetchMoreOffers(offersArgs: FetchOffersArgs, last?: number) {
       this.offers.setLoadingMore()
       try {
-        const offers = await this.client.fetchOffers(offersArgs, LIMIT_ITEMS_PER_PAGE, last)
+        const offers = await this.clients.get(this.defaultChainName)!.fetchOffers(offersArgs, LIMIT_ITEMS_PER_PAGE, last)
         this.offers.addMoreItems(offers, LIMIT_ITEMS_PER_PAGE)
       } catch (e) {
         this.handle.error(e)
@@ -167,7 +188,7 @@ export const useClientStore = defineStore({
     async fetchMyOffers() {
       this.myOffers = ListResult.loading()
       try {
-        const myOffers = await this.client.fetchMyOffers(LIMIT_ITEMS_PER_PAGE)
+        const myOffers = await this.clients.get(this.defaultChainName)!.fetchMyOffers(LIMIT_ITEMS_PER_PAGE)
         this.myOffers = ListResult.success(myOffers, LIMIT_ITEMS_PER_PAGE)
       } catch (e) {
         this.myOffers = ListResult.error(e as ChainError)
@@ -177,7 +198,7 @@ export const useClientStore = defineStore({
     async fetchMoreMyOffers(last: number) {
       this.myOffers.setLoadingMore()
       try {
-        const myOffers = await this.client.fetchMyOffers(LIMIT_ITEMS_PER_PAGE, last)
+        const myOffers = await this.clients.get(this.defaultChainName)!.fetchMyOffers(LIMIT_ITEMS_PER_PAGE, last)
         this.myOffers.addMoreItems(myOffers, LIMIT_ITEMS_PER_PAGE)
       } catch (e) {
         this.handle.error(e)
@@ -205,8 +226,8 @@ export const useClientStore = defineStore({
           owner_contact,
           owner_encryption_key,
         } as PostOffer
-        const offerId = await this.client.createOffer(postOffer)
-        trackOffer(OfferEvents.created, toOfferData(offerId, postOffer, this.chainClient))
+        const offerId = await this.clients.get(this.defaultChainName)!.createOffer(postOffer)
+        trackOffer(OfferEvents.created, toOfferData(offerId, postOffer, this.defaultChainName))
         await this.fetchProfile()
         await this.fetchMyOffers()
       } catch (e) {
@@ -218,8 +239,8 @@ export const useClientStore = defineStore({
     async updateOffer(updateOffer: PatchOffer) {
       this.loadingState = LoadingState.show('Updating Offer...')
       try {
-        await this.client.updateOffer(updateOffer)
-        trackOffer(OfferEvents.updated, toOfferData(updateOffer.id, updateOffer, this.chainClient))
+        await this.clients.get(this.defaultChainName)!.updateOffer(updateOffer)
+        trackOffer(OfferEvents.updated, toOfferData(updateOffer.id, updateOffer, this.defaultChainName))
         await this.fetchMyOffers()
       } catch (e) {
         this.handle.error(e)
@@ -231,8 +252,8 @@ export const useClientStore = defineStore({
       this.loadingState = LoadingState.show('Archiving Offer...')
       try {
         updateOffer.state = OfferState.paused
-        await this.client.updateOffer(updateOffer)
-        trackOffer(OfferEvents.unarchived, toOfferData(updateOffer.id, updateOffer, this.chainClient))
+        await this.clients.get(this.defaultChainName)!.updateOffer(updateOffer)
+        trackOffer(OfferEvents.unarchived, toOfferData(updateOffer.id, updateOffer, this.defaultChainName))
         await this.fetchMyOffers()
       } catch (e) {
         this.handle.error(e)
@@ -254,9 +275,9 @@ export const useClientStore = defineStore({
           taker_contact,
           profile_taker_encryption_key,
         }
-        const trade_id = await this.client.openTrade(newTrade)
+        const trade_id = await this.clients.get(this.defaultChainName)!.openTrade(newTrade)
         const tradeInfo = await this.fetchTradeDetail(trade_id)
-        trackTrade(TradeEvents.created, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.chainClient))
+        trackTrade(TradeEvents.created, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.defaultChainName))
         this.notifyOnBot({ ...tradeInfo.trade, state: TradeState.request_created })
         await this.fetchProfile()
         const route = isNaN(trade_id) ? { name: 'Trades' } : { name: 'TradeDetail', params: { id: trade_id } }
@@ -270,7 +291,7 @@ export const useClientStore = defineStore({
     async fetchTrades() {
       this.trades = ListResult.loading()
       try {
-        const tradesList = await this.client.fetchTrades(LIMIT_ITEMS_PER_PAGE)
+        const tradesList = await this.clients.get(this.defaultChainName)!.fetchTrades(LIMIT_ITEMS_PER_PAGE)
         this.trades = ListResult.success(tradesList, LIMIT_ITEMS_PER_PAGE)
       } catch (e) {
         this.trades = ListResult.error(e as ChainError)
@@ -279,7 +300,7 @@ export const useClientStore = defineStore({
     async fetchMoreTrades(last: number) {
       this.trades.setLoadingMore()
       try {
-        const trades = await this.client.fetchTrades(LIMIT_ITEMS_PER_PAGE, last)
+        const trades = await this.clients.get(this.defaultChainName)!.fetchTrades(LIMIT_ITEMS_PER_PAGE, last)
         this.trades.addMoreItems(trades, LIMIT_ITEMS_PER_PAGE)
       } catch (e) {
         this.handle.error(e)
@@ -288,37 +309,37 @@ export const useClientStore = defineStore({
     async fetchProposals(startBefore?: number) {
       this.proposals = ListResult.loading()
       try {
-        const proposals = await this.client.fetchProposals(LIMIT_ITEMS_PER_PAGE, startBefore)
+        const proposals = await this.clients.get(this.defaultChainName)!.fetchProposals(LIMIT_ITEMS_PER_PAGE, startBefore)
         this.proposals = ListResult.success(proposals, LIMIT_ITEMS_PER_PAGE)
       } catch (e) {
         this.proposals = ListResult.error(e as ChainError)
       }
     },
     async fetchProposalVotes(proposalId: number) {
-      return await this.client.fetchProposalVotes(proposalId)
+      return await this.clients.get(this.defaultChainName)!.fetchProposalVotes(proposalId)
     },
     async fetchProposal(proposalId: number) {
-      return await this.client.fetchProposal(proposalId)
+      return await this.clients.get(this.defaultChainName)!.fetchProposal(proposalId)
     },
     async fetchThreshold() {
-      return await this.client.fetchThreshold()
+      return await this.clients.get(this.defaultChainName)!.fetchThreshold()
     },
     async fetchTradeDetail(tradeId: number) {
-      return await this.client.fetchTradeDetail(tradeId)
+      return await this.clients.get(this.defaultChainName)!.fetchTradeDetail(tradeId)
     },
     async fetchTotalStaked() {
-      return await this.client.fetchTotalStaked()
+      return await this.clients.get(this.defaultChainName)!.fetchTotalStaked()
     },
     async fetchStakedByAddress(address: string) {
-      return await this.client.fetchStakedByAddress(address)
+      return await this.clients.get(this.defaultChainName)!.fetchStakedByAddress(address)
     },
     async fetchUnstakeClaims(address: string) {
-      return await this.client.fetchUnstakeClaims(address)
+      return await this.clients.get(this.defaultChainName)!.fetchUnstakeClaims(address)
     },
     async castVote(vote: VoteType, proposalId: number) {
       this.loadingState = LoadingState.show('Casting vote...')
       try {
-        await this.client.castVote(vote, proposalId)
+        await this.clients.get(this.defaultChainName)!.castVote(vote, proposalId)
       } catch (e) {
         this.handle.error(e)
       } finally {
@@ -328,7 +349,7 @@ export const useClientStore = defineStore({
     async bond(amount: number) {
       this.loadingState = LoadingState.show('Bonding...')
       try {
-        await this.client.bond(amount)
+        await this.clients.get(this.defaultChainName)!.bond(amount)
       } catch (e) {
         this.handle.error(e)
       } finally {
@@ -338,7 +359,7 @@ export const useClientStore = defineStore({
     async unbond(amount: number) {
       this.loadingState = LoadingState.show('Unbonding...')
       try {
-        await this.client.unbond(amount)
+        await this.clients.get(this.defaultChainName)!.unbond(amount)
       } catch (e) {
         this.handle.error(e)
       } finally {
@@ -348,7 +369,7 @@ export const useClientStore = defineStore({
     async claim() {
       this.loadingState = LoadingState.show('Claiming...')
       try {
-        await this.client.claim()
+        await this.clients.get(this.defaultChainName)!.claim()
       } catch (e) {
         this.handle.error(e)
       } finally {
@@ -358,7 +379,7 @@ export const useClientStore = defineStore({
     async propose(proposal: NewProposal) {
       this.loadingState = LoadingState.show('Proposing...')
       try {
-        await this.client.propose(proposal)
+        await this.clients.get(this.defaultChainName)!.propose(proposal)
       } catch (e) {
         this.handle.error(e)
       } finally {
@@ -368,7 +389,7 @@ export const useClientStore = defineStore({
     async fetchArbitrators() {
       this.arbitrators = ListResult.loading()
       try {
-        const arbitratorsList = await this.client.fetchArbitrators()
+        const arbitratorsList = await this.clients.get(this.defaultChainName)!.fetchArbitrators()
         this.arbitrators = ListResult.success(arbitratorsList)
       } catch (e) {
         this.arbitrators = ListResult.error(e as ChainError)
@@ -378,7 +399,7 @@ export const useClientStore = defineStore({
       this.openDisputes = ListResult.loading()
       this.closedDisputes = ListResult.loading()
       try {
-        const disputedTrades = await this.client.fetchDisputedTrades(limit, last)
+        const disputedTrades = await this.clients.get(this.defaultChainName)!.fetchDisputedTrades(limit, last)
         this.openDisputes = ListResult.success(disputedTrades.openDisputes)
         this.closedDisputes = ListResult.success(disputedTrades.closedDisputes)
       } catch (e) {
@@ -387,7 +408,7 @@ export const useClientStore = defineStore({
     },
     async updateFiatPrice(fiat: FiatCurrency, denom: Denom) {
       try {
-        const price = await this.client.updateFiatPrice(fiat, denom)
+        const price = await this.clients.get(this.defaultChainName)!.updateFiatPrice(fiat, denom)
         if (this.fiatPrices.has(fiat)) {
           this.fiatPrices.get(fiat)?.set(denomToValue(denom), price.price)
         } else {
@@ -399,14 +420,14 @@ export const useClientStore = defineStore({
       }
     },
     async fetchFiatPriceForDenom(fiat: FiatCurrency, denom: Denom) {
-      return await this.client.updateFiatPrice(fiat, denom)
+      return await this.clients.get(this.defaultChainName)!.updateFiatPrice(fiat, denom)
     },
     async acceptTradeRequest(tradeId: number, makerContact: string) {
       this.loadingState = LoadingState.show('Accepting trade...')
       try {
-        await this.client.acceptTradeRequest(tradeId, makerContact)
+        await this.clients.get(this.defaultChainName)!.acceptTradeRequest(tradeId, makerContact)
         const tradeInfo = await this.fetchTradeDetail(tradeId)
-        trackTrade(TradeEvents.accepted, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.chainClient))
+        trackTrade(TradeEvents.accepted, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.defaultChainName))
         this.notifyOnBot({ ...tradeInfo.trade, state: TradeState.request_accepted })
       } catch (e) {
         this.handle.error(e)
@@ -417,9 +438,9 @@ export const useClientStore = defineStore({
     async cancelTradeRequest(tradeId: number) {
       this.loadingState = LoadingState.show('Canceling trade...')
       try {
-        await this.client.cancelTradeRequest(tradeId)
+        await this.clients.get(this.defaultChainName)!.cancelTradeRequest(tradeId)
         const tradeInfo = await this.fetchTradeDetail(tradeId)
-        trackTrade(TradeEvents.canceled, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.chainClient))
+        trackTrade(TradeEvents.canceled, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.defaultChainName))
         this.notifyOnBot({ ...tradeInfo.trade, state: TradeState.request_canceled })
       } catch (e) {
         this.handle.error(e)
@@ -430,9 +451,9 @@ export const useClientStore = defineStore({
     async fundEscrow(tradeInfo: TradeInfo, makerContact?: string) {
       this.loadingState = LoadingState.show('Funding trade...')
       try {
-        await this.client.fundEscrow(tradeInfo, makerContact)
+        await this.clients.get(this.defaultChainName)!.fundEscrow(tradeInfo, makerContact)
         const trade = await this.fetchTradeDetail(tradeInfo.trade.id)
-        trackTrade(TradeEvents.funded, toTradeData(trade.trade, trade.offer.offer, this.chainClient))
+        trackTrade(TradeEvents.funded, toTradeData(trade.trade, trade.offer.offer, this.defaultChainName))
         this.notifyOnBot({ ...tradeInfo.trade, state: TradeState.escrow_funded })
       } catch (e) {
         this.handle.error(e)
@@ -443,9 +464,9 @@ export const useClientStore = defineStore({
     async setFiatDeposited(tradeId: number) {
       this.loadingState = LoadingState.show('Marking trade as paid...')
       try {
-        await this.client.setFiatDeposited(tradeId)
+        await this.clients.get(this.defaultChainName)!.setFiatDeposited(tradeId)
         const tradeInfo = await this.fetchTradeDetail(tradeId)
-        trackTrade(TradeEvents.paid, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.chainClient))
+        trackTrade(TradeEvents.paid, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.defaultChainName))
         this.notifyOnBot({ ...tradeInfo.trade, state: TradeState.fiat_deposited })
       } catch (e) {
         this.handle.error(e)
@@ -456,9 +477,9 @@ export const useClientStore = defineStore({
     async releaseEscrow(tradeId: number) {
       this.loadingState = LoadingState.show('Funding trade...')
       try {
-        await this.client.releaseEscrow(tradeId)
+        await this.clients.get(this.defaultChainName)!.releaseEscrow(tradeId)
         const tradeInfo = await this.fetchTradeDetail(tradeId)
-        trackTrade(TradeEvents.released, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.chainClient))
+        trackTrade(TradeEvents.released, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.defaultChainName))
         this.notifyOnBot({ ...tradeInfo.trade, state: TradeState.escrow_released })
       } catch (e) {
         this.handle.error(e)
@@ -469,9 +490,9 @@ export const useClientStore = defineStore({
     async refundEscrow(tradeId: number) {
       this.loadingState = LoadingState.show('Refunding trade...')
       try {
-        await this.client.refundEscrow(tradeId)
+        await this.clients.get(this.defaultChainName)!.refundEscrow(tradeId)
         const tradeInfo = await this.fetchTradeDetail(tradeId)
-        trackTrade(TradeEvents.refunded, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.chainClient))
+        trackTrade(TradeEvents.refunded, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.defaultChainName))
       } catch (e) {
         this.handle.error(e)
       } finally {
@@ -481,9 +502,9 @@ export const useClientStore = defineStore({
     async openDispute(tradeId: number, buyerContact: string, sellerContact: string) {
       this.loadingState = LoadingState.show('Opening dispute...')
       try {
-        await this.client.openDispute(tradeId, buyerContact, sellerContact)
+        await this.clients.get(this.defaultChainName)!.openDispute(tradeId, buyerContact, sellerContact)
         const tradeInfo = await this.fetchTradeDetail(tradeId)
-        trackTrade(TradeEvents.disputed, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.chainClient))
+        trackTrade(TradeEvents.disputed, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.defaultChainName))
         this.notifyOnBot({ ...tradeInfo.trade, state: TradeState.escrow_disputed })
       } catch (e) {
         this.handle.error(e)
@@ -494,10 +515,25 @@ export const useClientStore = defineStore({
     async settleDispute(tradeId: number, winner: string) {
       this.loadingState = LoadingState.show('Settling dispute...')
       try {
-        await this.client.settleDispute(tradeId, winner)
+        await this.clients.get(this.defaultChainName)!.settleDispute(tradeId, winner)
         const tradeInfo = await this.fetchTradeDetail(tradeId)
-        trackTrade(TradeEvents.dispute_settled, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.chainClient))
+        trackTrade(TradeEvents.dispute_settled, toTradeData(tradeInfo.trade, tradeInfo.offer.offer, this.defaultChainName))
         this.notifyOnBot({ ...tradeInfo.trade, state: TradeState.settled_for_maker })
+      } catch (e) {
+        this.handle.error(e)
+      } finally {
+        this.loadingState = LoadingState.dismiss()
+      }
+    },
+    async migrateWhLocalTerra2ToKujira() {
+      this.loadingState = LoadingState.show('Migrating...')
+      try {
+        const terraClient = this.clients.get(ChainName.terra) as CosmosChain
+        const kujiraClient = this.clients.get(ChainName.kujiraMainnet) as CosmosChain
+        const kujiraAddress = kujiraClient.getWalletAddress()
+        await terraClient.fetchWHLocalTerra2Balance()
+        const whLocalTerra2Balance = this.whLocalTerra2Balance.balance
+        await terraClient.migrateWhLocalTerra2ToKujira(whLocalTerra2Balance, kujiraAddress)
       } catch (e) {
         this.handle.error(e)
       } finally {
@@ -506,7 +542,7 @@ export const useClientStore = defineStore({
     },
     notifyOnBot(trade: { id: number; state: TradeState; buyer: string; seller: string }) {
       // only on mainnet it will trigger the bot
-      if (this.chainClient === ChainClient.kujiraMainnet) {
+      if (this.defaultChainName === ChainName.kujiraMainnet) {
         const address = this.userWallet.address === trade.seller ? trade.buyer : trade.seller
         const notification = JSON.stringify({ data: [{ trade_id: trade.id, trade_state: trade.state, address }] })
         axios

@@ -10,6 +10,7 @@ import type { CosmosConfig, HubInfo } from '~/network/cosmos/config'
 import type {
   Addr,
   Arbitrator,
+  CW20Balance,
   Denom,
   DenomFiatPrice,
   FetchOffersArgs,
@@ -32,8 +33,12 @@ import type {
   Vote,
   VoteType,
 } from '~/types/components.interface'
-import { DAO_DENOM, DAO_MULTISIG, DAO_STAKING } from '~/utils/constants'
+import { DAO_DENOM, DAO_MULTISIG, DAO_STAKING, WHLOCALICS20TERRA2, WHLOCAL_TERRA2 } from '~/utils/constants'
 import { denomToValue } from '~/utils/denom'
+import { Buffer } from 'buffer';
+
+// @ts-ignore
+window.Buffer = Buffer;
 
 export class CosmosChain implements Chain {
   protected config: CosmosConfig
@@ -621,6 +626,19 @@ export class CosmosChain implements Chain {
     }
   }
 
+  async fetchWHLocalTerra2Balance(): Promise<CW20Balance> {
+    try {
+      if (!this.cwClient) {
+        await this.init()
+      }
+      const query = { balance: { address: this.getWalletAddress() } }
+      const response = await this.cwClient!.queryContractSmart(WHLOCAL_TERRA2, query) as CW20Balance
+      return response
+    } catch (e) {
+      throw DefaultError.fromError(e)
+    }
+  }
+
   async castVote(vote: VoteType, proposalId: number) {
     const msg = {vote: { 
       vote: vote,
@@ -711,6 +729,34 @@ export class CosmosChain implements Chain {
           'auto'
         )
         console.log('Propose result >> ', result)
+      } catch (e) {
+        throw DefaultError.fromError(e)
+      }
+    }
+  }
+
+  async migrateWhLocalTerra2ToKujira(amount: string, recipient: string) {
+    const msg = { channel: "channel-34", remote_address: recipient }
+    const base64msg = Buffer.from(JSON.stringify(msg)).toString('base64')
+    const cw20sendMsg = {
+      send :{ 
+        contract: WHLOCALICS20TERRA2,
+        amount,
+        msg: base64msg
+      }
+    }
+    console.log('Migrate msg >> ', cw20sendMsg)
+    if (this.cwClient instanceof SigningCosmWasmClient && this.signer) {
+      try {
+        const result = await this.cwClient.execute(
+          this.getWalletAddress(),
+          WHLOCAL_TERRA2,
+          cw20sendMsg,
+          'auto'
+        )
+        console.log('Migrate result >> ', result)
+        const url = `https://terrasco.pe/mainnet/tx/${result.transactionHash}`
+        window.open(url, '_blank')
       } catch (e) {
         throw DefaultError.fromError(e)
       }

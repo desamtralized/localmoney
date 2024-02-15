@@ -33,6 +33,7 @@ import type {
   VoteType,
 } from '~/types/components.interface'
 import { CosmosChain } from '~/network/cosmos/CosmosChain'
+import { TERRA_CONFIG, TERRA_HUB_INFO } from './cosmos/config/terra'
 
 export interface Chain {
   init(): void
@@ -115,25 +116,31 @@ export interface Chain {
   claim(): Promise<void>
 
   propose(proposal: NewProposal): Promise<void>
+
+  // Migration endpoints
+  migrateWhLocalTerra2ToKujira(amount: string, recipient: string): Promise<void>
 }
 
-export enum ChainClient {
+export enum ChainName {
   kujiraTestnet = 'KUJIRA_TESTNET',
   kujiraMainnet = 'KUJIRA_MAINNET',
+  terra = 'TERRA',
   juno = 'JUNO',
   dev = 'DEV',
 }
 
 // Centralized place to instantiate chain client and inject dependencies if needed
-export function chainFactory(client: ChainClient): Chain {
-  switch (client) {
-    case ChainClient.kujiraTestnet:
+export function chainFactory(chainName: ChainName): CosmosChain {
+  switch (chainName) {
+    case ChainName.kujiraTestnet:
       return new CosmosChain(KUJIRA_TESTNET_CONFIG, KUJIRA_TESTNET_HUB_INFO)
-    case ChainClient.kujiraMainnet:
+    case ChainName.kujiraMainnet:
       return new CosmosChain(KUJIRA_MAINNET_CONFIG, KUJIRA_MAINNET_HUB_INFO)
-    case ChainClient.juno:
+    case ChainName.terra:
+      return new CosmosChain(TERRA_CONFIG, TERRA_HUB_INFO)
+    case ChainName.juno:
       return new CosmosChain(JUNO_TESTNET_CONFIG, JUNO_TESTNET_HUB_INFO)
-    case ChainClient.dev:
+    case ChainName.dev:
       return new CosmosChain(DEV_CONFIG, DEV_HUB_INFO)
   }
 }

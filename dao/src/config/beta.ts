@@ -1,6 +1,6 @@
-import { ChainClient } from '~/network/Chain'
+import { ChainName } from '~/network/Chain'
 import type { Addr } from '~/types/components.interface'
 
-export function isBetaMaker(addr: Addr, chainClient: ChainClient, betaMakers: String[]): boolean {
-  return chainClient === ChainClient.kujiraMainnet ? betaMakers.includes(addr) : true
+export function isBetaMaker(addr: Addr, chainClient: ChainName, betaMakers: String[]): boolean {
+  return chainClient === ChainName.kujiraMainnet ? betaMakers.includes(addr) : true
 }

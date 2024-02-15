@@ -1,6 +1,7 @@
 import Proposals from '~/ui/pages/Proposals.vue'
 import Proposal from '~/ui/pages/Proposal.vue'
 import Staking from '~/ui/pages/Staking.vue'
+import Migration from '~/ui/pages/Migration.vue'
 
 const routes = [
   {
@@ -23,6 +24,11 @@ const routes = [
     path: '/staking',
     name: 'Staking',
     component: Staking,
+  },
+  {
+    path: '/migration',
+    name: 'Migration',
+    component: Migration
   }
 ]
 
