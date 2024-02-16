@@ -31,7 +31,7 @@ import { LoadingState, OfferState, TradeState } from '~/types/components.interfa
 import type { Secrets } from '~/utils/crypto'
 import { encryptData, generateKeys } from '~/utils/crypto'
 import { denomToValue } from '~/utils/denom'
-import { CRYPTO_DECIMAL_PLACES, WHLOCALICS20TERRA2 } from '~/utils/constants'
+import { CRYPTO_DECIMAL_PLACES, KUJI_LOCAL_DENOM, WHLOCALICS20TERRA2, WHLOCAL_KUJI_DENOM } from '~/utils/constants'
 import { OfferEvents, TradeEvents, toOfferData, toTradeData, trackOffer, trackTrade } from '~/analytics/analytics'
 import { CosmosChain } from '~/network/cosmos/CosmosChain'
 
@@ -49,6 +49,7 @@ export const useClientStore = defineStore({
       profile: <Profile>{},
       localBalance: <Coin>{},
       whLocalTerra2Balance: <CW20Balance>{},
+      whLocalKujiBalance: <Coin>{},
       fiatPrices: new Map<String, Map<String, number>>(),
       offers: <ListResult<OfferResponse>>ListResult.loading(),
       makerOffers: <ListResult<OfferResponse>>ListResult.loading(),
@@ -93,20 +94,11 @@ export const useClientStore = defineStore({
       }
     },
     async fetchBalances() {
-      await this.fetchLocalBalance()
-    },
-    async fetchLocalBalance() {
       // Todo we should change this to get the LOCAL denom from some config
-      let localDenom: Denom
-      if (this.defaultChainName === ChainName.kujiraMainnet) {
-        localDenom = { native: 'factory/kujira1swkuyt08z74n5jl7zr6hx0ru5sa2yev5v896p6/local' }
-      } else {
-        localDenom = { native: 'factory/kujira12w0ua4eqnkk0aahtnjlt6h3dhxael6x25s507w/local' }
-      }
-
       if (this.defaultChainName === ChainName.kujiraMainnet) {
         const kujiraClient = this.clients.get(ChainName.kujiraMainnet)! as CosmosChain
-        this.localBalance = await kujiraClient.fetchTokenBalance(localDenom)
+        this.localBalance = await kujiraClient.fetchTokenBalance(KUJI_LOCAL_DENOM)
+        this.whLocalKujiBalance = await kujiraClient.fetchTokenBalance(WHLOCAL_KUJI_DENOM)
       }
 
       let terraClient = this.clients.get(ChainName.terra) as CosmosChain
@@ -534,6 +526,20 @@ export const useClientStore = defineStore({
         await terraClient.fetchWHLocalTerra2Balance()
         const whLocalTerra2Balance = this.whLocalTerra2Balance.balance
         await terraClient.migrateWhLocalTerra2ToKujira(whLocalTerra2Balance, kujiraAddress)
+      } catch (e) {
+        this.handle.error(e)
+      } finally {
+        this.loadingState = LoadingState.dismiss()
+      }
+    },
+    async swapWhLocalKujiToLocal() {
+      this.loadingState = LoadingState.show('Swapping...')
+      try {
+        const kujiraClient = this.clients.get(ChainName.kujiraMainnet) as CosmosChain
+        await kujiraClient.swapWhLocalKujiToLocal(this.whLocalKujiBalance.amount)
+        setTimeout(() => {
+          this.fetchBalances()
+        }, 2000)
       } catch (e) {
         this.handle.error(e)
       } finally {

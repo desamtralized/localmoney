@@ -33,7 +33,7 @@ import type {
   Vote,
   VoteType,
 } from '~/types/components.interface'
-import { DAO_DENOM, DAO_MULTISIG, DAO_STAKING, WHLOCALICS20TERRA2, WHLOCAL_TERRA2 } from '~/utils/constants'
+import { DAO_DENOM, DAO_MULTISIG, DAO_STAKING, WHLOCALICS20TERRA2, WHLOCAL_KUJI_DENOM, WHLOCAL_SWAP, WHLOCAL_TERRA2 } from '~/utils/constants'
 import { denomToValue } from '~/utils/denom'
 import { Buffer } from 'buffer'
 
@@ -752,10 +752,30 @@ export class CosmosChain implements Chain {
           this.getWalletAddress(),
           WHLOCAL_TERRA2,
           cw20sendMsg,
-          'auto'
+          'auto',
         )
         console.log('Migrate result >> ', result)
         const url = `https://terrasco.pe/mainnet/tx/${result.transactionHash}`
+        window.open(url, '_blank')
+      } catch (e) {
+        throw DefaultError.fromError(e)
+      }
+    }
+  }
+
+  async swapWhLocalKujiToLocal(amount: string) {
+    const msg = { swap: {} }
+    if (this.cwClient instanceof SigningCosmWasmClient && this.signer) {
+      try {
+        const result = await this.cwClient!.execute(
+          this.getWalletAddress(),
+          WHLOCAL_SWAP,
+          msg,
+          'auto',
+          'whLOCAL -> LOCAL',
+          [{amount, denom: WHLOCAL_KUJI_DENOM.native}]
+        )
+        const url = `https://finder.kujira.network/kaiyo-1/tx/${result.transactionHash}`
         window.open(url, '_blank')
       } catch (e) {
         throw DefaultError.fromError(e)

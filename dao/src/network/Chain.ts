@@ -119,6 +119,8 @@ export interface Chain {
 
   // Migration endpoints
   migrateWhLocalTerra2ToKujira(amount: string, recipient: string): Promise<void>
+
+  swapWhLocalKujiToLocal(amount: string): Promise<void>
 }
 
 export enum ChainName {

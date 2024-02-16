@@ -1,10 +1,11 @@
 export const FIAT_DECIMAL_PLACES = 100000000
 export const CRYPTO_DECIMAL_PLACES = 1000000
-// export const DAO_MULTISIG = "kujira15e682nq9jees29rm9j3h030af86lq2qtlejgphlspzqcvs9whf2q00nua5";
-// export const DAO_STAKING = "kujira12y9ltc6a0vnlce6dkdmkv23jm6euu3zgvnwcwlggd42wgexyvh2srr8r5q";
-// export const DAO_DENOM = "factory/kujira1643jxg8wasy5cfcn7xm8rd742yeazcksqlg4d7/umnta"
 export const DAO_DENOM = "factory/kujira1swkuyt08z74n5jl7zr6hx0ru5sa2yev5v896p6/local"
 export const DAO_STAKING = "kujira1dunea8kv50lvv58x3h6wds0k260gsu9ephze9jkckh7drd4tl0vsvhsr7j"
 export const DAO_MULTISIG = "kujira1vc98u3s2r4z45yhfhugwqw9dd952e0wn6l4wqrr7wq8txrzcgz4qgmxrej"
+
+export const KUJI_LOCAL_DENOM = {native:"factory/kujira1swkuyt08z74n5jl7zr6hx0ru5sa2yev5v896p6/local"}
 export const WHLOCAL_TERRA2 = "terra1xzkel96e5e8vfmqw7valzdzzv9hqasfyslclvnmvxdejvpda3xwsskxzus"
 export const WHLOCALICS20TERRA2 = "terra1d90p5lacfxnqgjxjupu234lxnxyeu8fdeef4d0e0nqy3p30r7gss4myn9x"
+export const WHLOCAL_KUJI_DENOM = {native:"ibc/DE92DB84EA7E8CB5EC76BC395CF634D6483B67414AD28BEF3F71EBFD6A780D36"}
+export const WHLOCAL_SWAP = "kujira1hf84x7k4nkmult2daw65fe8yujr4yetvsv2zs2y33h2lq0smxu4sun5mmh"

@@ -6,8 +6,8 @@ import { useClientStore } from '~/stores/client'
 const client = useClientStore()
 const { userWallet } = storeToRefs(client)
 
-function formatNumberWithThousand(number: number) {
-  return (number / 1000).toFixed(2)
+const fmtTokenAmount = (balance: string) => {
+  return (parseInt(balance) / 1e6).toFixed(6)
 }
 
 onMounted(() => {
@@ -15,7 +15,7 @@ onMounted(() => {
 })
 const whLocal2Balance = computed(() => {
   if (!client.whLocalTerra2Balance || client.whLocalTerra2Balance.balance.length == 0) return '0.00'
-  return (parseInt(client.whLocalTerra2Balance.balance) / 1e6).toFixed(6)
+  return fmtTokenAmount(client.whLocalTerra2Balance.balance)
 })
 </script>
 
@@ -29,12 +29,10 @@ const whLocal2Balance = computed(() => {
         <button @click="client.migrateWhLocalTerra2ToKujira"
           :disabled="whLocal2Balance === '0.00'">IBC to KUJIRA</button>
       </div>
-    </div>
-    <div class="row">
       <div class="card">
-        <h3>whLOCAL Balance on KUJIRA</h3>
-        <p> coming soon </p>
-        <button>Swap to $LOCAL</button>
+        <h3>whLOCAL on KUJIRA</h3>
+        <p> {{ fmtTokenAmount(client.whLocalKujiBalance.amount) }} </p>
+        <button @click="client.swapWhLocalKujiToLocal">Swap to $LOCAL</button>
       </div>
     </div>
   </div>

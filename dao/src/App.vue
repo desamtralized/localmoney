@@ -12,7 +12,7 @@ client.setClient(ChainName.kujiraMainnet) // required to properly init chain
 const loading = computed(() => client.loadingState)
 
 useHead({
-  title: client.chainClient === ChainName.kujiraMainnet ? 'Local DAO' : 'Local DAO - TESTNET',
+  title: 'LOCAL DAO - Decentralized P2P marketplace for the multi-chain world',
   meta: [
     {
       name: 'description',
