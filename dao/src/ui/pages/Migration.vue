@@ -24,7 +24,7 @@ const whLocal2Balance = computed(() => {
     <h2>Migration</h2>
     <div class="row">
       <div class="card">
-        <h3>$LOCAL on Terra2</h3>
+        <h3>whLOCAL on Terra2</h3>
         <p>{{(parseInt(client.whLocalTerra2Balance.balance)/1e6).toFixed(6)}}</p>
         <button @click="client.migrateWhLocalTerra2ToKujira"
           :disabled="whLocal2Balance === '0.00'">IBC to KUJIRA</button>
