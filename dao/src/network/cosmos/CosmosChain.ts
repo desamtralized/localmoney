@@ -3,7 +3,7 @@ import { CosmWasmClient, SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate
 import type { AccountData, OfflineSigner } from '@cosmjs/launchpad'
 import { Decimal } from '@cosmjs/math'
 import type { OfflineDirectSigner } from '@cosmjs/proto-signing'
-import type { Coin } from '@cosmjs/stargate'
+import { StargateClient, type Coin } from '@cosmjs/stargate'
 import type { Chain } from '~/network/Chain'
 import { DefaultError, WalletNotConnected, WalletNotInstalled } from '~/network/chain-error'
 import type { CosmosConfig, HubInfo } from '~/network/cosmos/config'
@@ -47,6 +47,7 @@ export class CosmosChain implements Chain {
   protected signer?: OfflineSigner | OfflineDirectSigner
   protected account?: AccountData
   protected cwClient?: CosmWasmClient | SigningCosmWasmClient
+  protected starGateClient?: StargateClient
 
   constructor(config: CosmosConfig, hubInfo: HubInfo) {
     this.config = config
@@ -55,6 +56,7 @@ export class CosmosChain implements Chain {
 
   async init() {
     this.cwClient = await CosmWasmClient.connect(this.config.rpcUrl)
+    this.starGateClient = await StargateClient.connect(this.config.rpcUrl)
     this.hubInfo.hubConfig = (await this.cwClient.queryContractSmart(this.hubInfo.hubAddress, {
       config: {},
     })) as HubConfig
@@ -285,7 +287,7 @@ export class CosmosChain implements Chain {
         const response = (await this.cwClient!.queryContractSmart(this.hubInfo.hubConfig.trade_addr, {
           trades: { user: userAddr, role: 'trader', limit, last },
         })) as TradeInfo[]
-        console.log('response >>> ', response)
+        // console.log('response >>> ', response)
         return response
       } catch (e) {
         throw DefaultError.fromError(e)
@@ -315,7 +317,7 @@ export class CosmosChain implements Chain {
         const openDisputes = disputedTrades.filter((t) => t.trade.state === 'escrow_disputed')
         const closedDisputes = disputedTrades.filter((t) => t.trade.state !== 'escrow_disputed')
         const response: { openDisputes: TradeInfo[]; closedDisputes: TradeInfo[] } = { openDisputes, closedDisputes }
-        console.log('response >>> ', response)
+        // console.log('response >>> ', response)
         return response
       } catch (e) {
         throw DefaultError.fromError(e)

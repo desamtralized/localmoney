@@ -50,13 +50,12 @@ document.documentElement.style.setProperty('--vh', `${vh}px`)
 
 function propose() {
   nextTick(async () => {
-    const msgs = new Array();
-    console.log('title', title.value)
-    console.log('description', description.value)
+    // const msgs = [JSON.stringify(JSON.parse(message.value))]
+    console.log({title: title.value, description: description.value, msgs: JSON.parse(message.value)})
     const newProposal = {
       title: title.value,
       description: description.value,
-      msgs,
+      msgs: JSON.parse(message.value),
       latest: null
     };
     console.log('newProp', newProposal)

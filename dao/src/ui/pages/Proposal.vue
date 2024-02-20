@@ -62,6 +62,7 @@ onBeforeMount(() => {
       <p><strong>Status:</strong> {{ proposal.status }}</p>
       <p><strong>Proposer:</strong> {{ proposal.proposer }}</p>
       <p><strong>Expires:</strong> {{ formatTimestamp(proposal.expires.at_time) }}</p>
+      <p><strong>Messages:</strong> {{ JSON.stringify(proposal.msgs)}} </p>
     </div>
     <!-- Vote Summary -->
     <div class="vote-summary card">
